@@ -96,6 +96,14 @@ def kfp_features(X, T, y, seed=None):
 
         results = list(pbar)
 
+    # # Sequential processing.
+    # global global_X, global_T
+    # global_X, global_T = X, T
+
+    # results = []
+    # for task in tqdm(tasks, desc="[SEQUENTIAL] Generating k-FP Features"):
+    #     results.append(process_instance(task))
+
     # Collect results.
     for feat, lab in results:
         data_dict["feature"].append(feat)
