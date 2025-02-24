@@ -59,16 +59,16 @@ def chunks(labels, features):
     return labels_chunked, features_chunked
 
 
-def kfp_features(X, T, Y, seed=None):
+def kfp_features(X, T, y, seed=None):
     """
     Parallelized version of the kfp_features function using multiprocessing.Pool.
     X and T are large numpy arrays that are shared with worker processes.
     """
     data_dict = {"feature": [], "label": []}
-    unique_sites = np.unique(Y)
+    unique_sites = np.unique(y)
 
     # Precompute instance indices for each site.
-    site_to_indices = {site: np.flatnonzero(Y == site) for site in unique_sites}
+    site_to_indices = {site: np.flatnonzero(y == site) for site in unique_sites}
     tasks = []
     for site in unique_sites:
         indices = site_to_indices[site]
