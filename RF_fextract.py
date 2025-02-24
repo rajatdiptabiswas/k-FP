@@ -204,8 +204,8 @@ def interarrival_maxminmeansd_stats(list_data):
         avg_in = sum(In) / float(len(In))
         avg_out = sum(Out) / float(len(Out))
         avg_total = sum(Total) / float(len(Total))
-        interstats.append(
-            (
+        interstats.extend(
+            [
                 max(In),
                 max(Out),
                 max(Total),
@@ -218,13 +218,13 @@ def interarrival_maxminmeansd_stats(list_data):
                 np.percentile(In, 75),
                 np.percentile(Out, 75),
                 np.percentile(Total, 75),
-            )
+            ]
         )
     elif Out and not In:
         avg_out = sum(Out) / float(len(Out))
         avg_total = sum(Total) / float(len(Total))
-        interstats.append(
-            (
+        interstats.extend(
+            [
                 0,
                 max(Out),
                 max(Total),
@@ -237,13 +237,13 @@ def interarrival_maxminmeansd_stats(list_data):
                 0,
                 np.percentile(Out, 75),
                 np.percentile(Total, 75),
-            )
+            ]
         )
     elif In and not Out:
         avg_in = sum(In) / float(len(In))
         avg_total = sum(Total) / float(len(Total))
-        interstats.append(
-            (
+        interstats.extend(
+            [
                 max(In),
                 0,
                 max(Total),
@@ -256,10 +256,10 @@ def interarrival_maxminmeansd_stats(list_data):
                 np.percentile(In, 75),
                 0,
                 np.percentile(Total, 75),
-            )
+            ]
         )
     else:
-        interstats.extend(([0] * 15))
+        interstats.extend([0] * 12)  # 12 features, not 15
     return interstats
 
 
@@ -443,7 +443,7 @@ def TOTAL_FEATURES(list_data, max_size=175):
     ALL_FEATURES = []
 
     # ------TIME--------
-    intertimestats = [x for x in interarrival_maxminmeansd_stats(list_data)[0]]
+    intertimestats = [x for x in interarrival_maxminmeansd_stats(list_data)]
     timestats = time_percentile_stats(list_data)
     number_pkts = list(number_pkt_stats(list_data))
     thirtypkts = first_and_last_30_pkts_stats(list_data)
