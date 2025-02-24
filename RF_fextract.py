@@ -185,6 +185,20 @@ def interarrival_times(list_data):
 
 def interarrival_maxminmeansd_stats(list_data):
     interstats = []
+    interstats_labels = [
+        "interarrival_times_max_in",
+        "interarrival_times_max_out",
+        "interarrival_times_max_total",
+        "interarrival_times_avg_in",
+        "interarrival_times_avg_out",
+        "interarrival_times_avg_total",
+        "interarrival_times_std_in",
+        "interarrival_times_std_out",
+        "interarrival_times_std_total",
+        "interarrival_times_75th_percentile_in",
+        "interarrival_times_75th_percentile_out",
+        "interarrival_times_75th_percentile_total",
+    ]
     In, Out, Total = interarrival_times(list_data)
     if In and Out:
         avg_in = sum(In) / float(len(In))
