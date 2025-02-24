@@ -268,29 +268,43 @@ def time_percentile_stats(Total):
     In1 = [x[0] for x in In]
     Out1 = [x[0] for x in Out]
     Total1 = [x[0] for x in Total]
-    STATS = []
+    stats = []
+    stats_labels = [
+        "time_25th_percentile_in",
+        "time_50th_percentile_in",
+        "time_75th_percentile_in",
+        "time_100th_percentile_in",
+        "time_25th_percentile_out",
+        "time_50th_percentile_out",
+        "time_75th_percentile_out",
+        "time_100th_percentile_out",
+        "time_25th_percentile_total",
+        "time_50th_percentile_total",
+        "time_75th_percentile_total",
+        "time_100th_percentile_total",
+    ]
     if In1:
-        STATS.append(np.percentile(In1, 25))  # return 25th percentile
-        STATS.append(np.percentile(In1, 50))
-        STATS.append(np.percentile(In1, 75))
-        STATS.append(np.percentile(In1, 100))
+        stats.append(np.percentile(In1, 25))  # return 25th percentile
+        stats.append(np.percentile(In1, 50))
+        stats.append(np.percentile(In1, 75))
+        stats.append(np.percentile(In1, 100))
     if not In1:
-        STATS.extend(([0] * 4))
+        stats.extend(([0] * 4))
     if Out1:
-        STATS.append(np.percentile(Out1, 25))  # return 25th percentile
-        STATS.append(np.percentile(Out1, 50))
-        STATS.append(np.percentile(Out1, 75))
-        STATS.append(np.percentile(Out1, 100))
+        stats.append(np.percentile(Out1, 25))  # return 25th percentile
+        stats.append(np.percentile(Out1, 50))
+        stats.append(np.percentile(Out1, 75))
+        stats.append(np.percentile(Out1, 100))
     if not Out1:
-        STATS.extend(([0] * 4))
+        stats.extend(([0] * 4))
     if Total1:
-        STATS.append(np.percentile(Total1, 25))  # return 25th percentile
-        STATS.append(np.percentile(Total1, 50))
-        STATS.append(np.percentile(Total1, 75))
-        STATS.append(np.percentile(Total1, 100))
+        stats.append(np.percentile(Total1, 25))  # return 25th percentile
+        stats.append(np.percentile(Total1, 50))
+        stats.append(np.percentile(Total1, 75))
+        stats.append(np.percentile(Total1, 100))
     if not Total1:
-        STATS.extend(([0] * 4))
-    return STATS
+        stats.extend(([0] * 4))
+    return stats
 
 
 def number_pkt_stats(Total):
