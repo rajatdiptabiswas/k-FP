@@ -1,10 +1,97 @@
 import code
 import random
+import os
 import dill
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from RF_fextract import kfp_features
+
+
+def load_dataset(input_dir: str, max_length=8000):
+    """
+    Process all dataset .tsv files in a directory and return numpy arrays.
+
+    Each .tsv file represents a single trace and follows the format:
+        <timestamp>\t<±size>
+    
+    The dataset directory contains multiple .tsv files in the format:
+        <label>-<instance>.tsv
+    where:
+        - <label> is an integer representing the website class.
+        - <instance> is a unique index for traces of that website.
+    
+    dataset/
+    --------------------
+    ├── 0-0.tsv
+    ├── 0-1.tsv
+    ├── ...
+    ├── 0-98.tsv
+    ├── 0-99.tsv
+    ├── 1-0.tsv
+    ├── 1-1.tsv
+    ├── ...
+    ├── 1-98.tsv
+    └── 1-99.tsv
+
+    0-0.tsv
+    --------------------
+    0.000000        74
+    0.006548        -74
+    0.006570        66
+    0.007009        264
+    0.018557        -66
+    ...
+    40.443012       -66
+    40.519793       -66
+    40.519808       66
+    40.519815       -66
+    40.519819       66
+
+    Parameters:
+        - input_dir (str): Path to the directory containing .tsv files.
+        - max_length (int): Maximum sequence length. Shorter traces are padded.
+
+    Returns:
+        - X (np.ndarray): Packet direction sequences (1 for outgoing, -1 for incoming), shape (N, max_length), padded with 0.
+        - T (np.ndarray): Packet timestamps, shape (N, max_length), padded with -1.
+        - y (np.ndarray): Integer website labels, shape (N,).
+    """
+    
+    file_list = sorted([f for f in os.listdir(input_dir) if f.endswith(".tsv")])
+
+    X_list, T_list, y_list = [], [], []
+
+    for file_name in file_list:
+        label = int(file_name.split("-")[0])  # Extract label from file name
+        file_path = os.path.join(input_dir, file_name)
+
+        data = np.loadtxt(file_path)
+
+        if data.ndim == 1:
+            data = np.expand_dims(data, axis=0)
+
+        T = data[:, 0]  # First column: timestamps
+        X = np.sign(data[:, 1])  # Convert packet sizes to direction: 1 (outgoing), -1 (incoming)
+
+        # Pad sequences to max_length
+        T_padded = np.full(max_length, -1.0, dtype=np.float32)
+        X_padded = np.zeros(max_length, dtype=np.float32)
+
+        length = min(len(T), max_length)
+        T_padded[:length] = T[:length]
+        X_padded[:length] = X[:length]
+
+        X_list.append(X_padded)
+        T_list.append(T_padded)
+        y_list.append(label)
+
+    # Convert to numpy arrays
+    X = np.array(X_list, dtype=np.float32)
+    T = np.array(T_list, dtype=np.float32)
+    y = np.array(y_list, dtype=np.int32)
+
+    return X, T, y
 
 
 def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
@@ -43,12 +130,14 @@ if __name__ == "__main__":
     # X: Packet direction (-1 for incoming, +1 for outgoing, 0 for padding)
     # T: Packet timestamp (relative to the first packet, padded with -1)
     # y: Website label (categorical identifier for each website)
-    with open("./X.dill", "rb") as file:
-        X = dill.load(file)
-    with open("./T.dill", "rb") as file:
-        T = dill.load(file)
-    with open("./y.dill", "rb") as file:
-        y = dill.load(file)
+    # with open("./X.dill", "rb") as file:
+    #     X = dill.load(file)
+    # with open("./T.dill", "rb") as file:
+    #     T = dill.load(file)
+    # with open("./y.dill", "rb") as file:
+    #     y = dill.load(file)
+
+    X, T, y = load_dataset("/Users/rajat/website-fingerprinting/slitheen/dataset/")
 
     """
     X: Packet direction sequences for 20910 traces, each of length 5000, padded with 0
