@@ -5,7 +5,10 @@ import dill
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from RF_fextract import kfp_features
+from RF_fextract import kfp_features, kfp_feature_labels
+
+
+DATASET_DIRECTORY = "/Users/rajat/website-fingerprinting/slitheen/dataset/"
 
 
 def load_dataset(input_dir: str, max_length=8000):
@@ -14,13 +17,13 @@ def load_dataset(input_dir: str, max_length=8000):
 
     Each .tsv file represents a single trace and follows the format:
         <timestamp>\t<±size>
-    
+
     The dataset directory contains multiple .tsv files in the format:
         <label>-<instance>.tsv
     where:
         - <label> is an integer representing the website class.
         - <instance> is a unique index for traces of that website.
-    
+
     dataset/
     --------------------
     ├── 0-0.tsv
@@ -57,7 +60,7 @@ def load_dataset(input_dir: str, max_length=8000):
         - T (np.ndarray): Packet timestamps, shape (N, max_length), padded with -1.
         - y (np.ndarray): Integer website labels, shape (N,).
     """
-    
+
     file_list = sorted([f for f in os.listdir(input_dir) if f.endswith(".tsv")])
 
     X_list, T_list, y_list = [], [], []
@@ -72,7 +75,9 @@ def load_dataset(input_dir: str, max_length=8000):
             data = np.expand_dims(data, axis=0)
 
         T = data[:, 0]  # First column: timestamps
-        X = np.sign(data[:, 1])  # Convert packet sizes to direction: 1 (outgoing), -1 (incoming)
+        X = np.sign(
+            data[:, 1]
+        )  # Convert packet sizes to direction: 1 (outgoing), -1 (incoming)
 
         # Pad sequences to max_length
         T_padded = np.full(max_length, -1.0, dtype=np.float32)
@@ -98,6 +103,9 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     """
     Closed world Random Forest classification of data.
     Only uses `scikit-learn` classification - does not do additional k-NN.
+
+    `train_set`, `valid_set`, `test_set` shape
+    [[n features], (class label, instance)]
     """
 
     tr_data, tr_label = list(zip(*train_set))
@@ -115,10 +123,30 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     )
     model.fit(tr_data, tr_label)
 
-    print(f"Feature importance scores:\n{model.feature_importances_}")
+    feature_labels = kfp_feature_labels()
+    importance_scores = model.feature_importances_
 
-    print(f"Validation Accuracy: {model.score(val_data, val_label)}")
-    print(f"Testing Accuracy   : {model.score(te_data, te_label)}")
+    crs = DATASET_DIRECTORY.strip("/").split("/")[-3]
+    websites = DATASET_DIRECTORY.strip("/").rsplit("/", maxsplit=1)[-1]
+    print(f"\n{crs.upper()} / {websites.upper()}\n")
+
+    # print("FEATURE LABELS")
+    # for label, feature in list(zip(feature_labels, tr_data[0])):
+    #     if feature.is_integer():
+    #         print(f"{int(feature):>15}    {label:<30}")
+    #     else:
+    #         print(f"{feature:15.10f}    {label:<30}")
+    # print()
+
+    print("FEATURE IMPORTANCE SCORES")
+    for score, label in sorted(
+        list(zip(importance_scores, feature_labels))[:20], reverse=True
+    ):
+        print(f"{score:>1.10f}    {label}")
+    print()
+
+    print(f"VALIDATION ACCURACY : {model.score(val_data, val_label)}")
+    print(f"TESTING ACCURACY    : {model.score(te_data, te_label)}")
 
 
 if __name__ == "__main__":
@@ -137,7 +165,7 @@ if __name__ == "__main__":
     # with open("./y.dill", "rb") as file:
     #     y = dill.load(file)
 
-    X, T, y = load_dataset("/Users/rajat/website-fingerprinting/slitheen/dataset/")
+    X, T, y = load_dataset(DATASET_DIRECTORY)
 
     """
     X: Packet direction sequences for 20910 traces, each of length 5000, padded with 0
