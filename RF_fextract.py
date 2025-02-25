@@ -367,6 +367,14 @@ def pkt_concentration_stats(Total):
         max(concentrations),
         concentrations,
     ]
+    stats_labels = [
+        "packet_concentration_std",
+        "packet_concentration_avg",
+        "packet_concentration_median",
+        "packet_concentration_min",
+        "packet_concentration_max",
+        "packet_concentration_list",
+    ]
     return stats
 
 
