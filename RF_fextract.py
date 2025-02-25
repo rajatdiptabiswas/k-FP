@@ -422,6 +422,12 @@ def avg_pkt_ordering_stats(Total):
     avg_in = sum(temp1) / float(len(temp1))
     avg_out = sum(temp2) / float(len(temp2))
     stats = [avg_in, avg_out, np.std(temp1), np.std(temp2)]
+    stats_labels = [
+        "packet_ordering_in_avg",
+        "packet_ordering_out_avg",
+        "packet_ordering_in_std",
+        "packet_ordering_out_std"
+    ]
     return stats
 
 
