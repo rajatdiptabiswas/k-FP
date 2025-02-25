@@ -145,6 +145,21 @@ def neighborhood(iterable):
 
 
 def chunkIt(seq, num):
+    """
+    Usually returns `num` chunks but can return `num + 1` chunks when
+    `len(seq)` is not divisible by `num`.
+
+    >>> len(chunkIt([x for x in range(13)], 4))
+    4
+    >>> len(chunkIt([x for x in range(13)], 5))
+    5
+    >>> len(chunkIt([x for x in range(13)], 6))
+    7
+    >>> chunkIt([x for x in range(13)], 6)
+    [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9], [10, 11], [12]]
+    >>> 13 / 6
+    2.1666666666666665
+    """
     avg = len(seq) / float(num)
     out = []
     last = 0.0
