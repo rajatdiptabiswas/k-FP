@@ -336,6 +336,12 @@ def first_and_last_30_pkts_stats(Total):
         if p[1] == 1:
             last30out.append(p)
     stats = []
+    stats_labels = [
+        "first_30_packets_in",
+        "first_30_packets_out",
+        "last_30_packets_in",
+        "last_30_packets_out",
+    ]
     stats.append(len(first30in))
     stats.append(len(first30out))
     stats.append(len(last30in))
@@ -465,11 +471,11 @@ def TOTAL_FEATURES(list_data, max_size=175):
     # ------TIME--------
     intertimestats = [x for x in interarrival_maxminmeansd_stats(list_data)]
     timestats = time_percentile_stats(list_data)
-    thirtypkts = first_and_last_30_pkts_stats(list_data)
     stdconc, avgconc, medconc, minconc, maxconc, conc = pkt_concentration_stats(
         list_data
     )
     number_pkts = number_pkt_stats(list_data)
+    thirty_pkts = first_and_last_30_pkts_stats(list_data)
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
         number_per_sec(list_data)
     )
@@ -502,9 +508,9 @@ def TOTAL_FEATURES(list_data, max_size=175):
     ALL_FEATURES.extend(intertimestats)
     ALL_FEATURES.extend(timestats)
     ALL_FEATURES.extend(number_pkts)
-    ALL_FEATURES.extend(thirtypkts)
     ALL_FEATURES.append(stdconc)
     ALL_FEATURES.append(avgconc)
+    ALL_FEATURES.extend(thirty_pkts)
     ALL_FEATURES.append(avg_per_sec)
     ALL_FEATURES.append(std_per_sec)
     ALL_FEATURES.append(avg_order_in)
