@@ -504,7 +504,7 @@ def TOTAL_FEATURES(list_data, max_size=175):
     # std_size_in, std_size_out = std_in_out_pkt_size(list_data)
     # max_size_in, max_size_out = max_in_out_pkt_size(list_data)
 
-    # TIME Features
+    # TIME FEATURES
     ALL_FEATURES.extend(intertimestats)
     ALL_FEATURES.extend(timestats)
     ALL_FEATURES.extend(number_pkts)
