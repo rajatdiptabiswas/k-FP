@@ -627,5 +627,92 @@ def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     return tuple(features)
 
 
+def kfp_feature_labels():
+    labels = [
+        # interarrival_maxminmeansd_stats()
+        "interarrival_times_max_in",
+        "interarrival_times_max_out",
+        "interarrival_times_max_total",
+        "interarrival_times_avg_in",
+        "interarrival_times_avg_out",
+        "interarrival_times_avg_total",
+        "interarrival_times_std_in",
+        "interarrival_times_std_out",
+        "interarrival_times_std_total",
+        "interarrival_times_75th_percentile_in",
+        "interarrival_times_75th_percentile_out",
+        "interarrival_times_75th_percentile_total",
+
+        # time_percentile_stats()
+        "time_25th_percentile_in",
+        "time_50th_percentile_in",
+        "time_75th_percentile_in",
+        "time_100th_percentile_in",
+        "time_25th_percentile_out",
+        "time_50th_percentile_out",
+        "time_75th_percentile_out",
+        "time_100th_percentile_out",
+        "time_25th_percentile_total",
+        "time_50th_percentile_total",
+        "time_75th_percentile_total",
+        "time_100th_percentile_total",
+
+        # number_pkt_stats()
+        "number_packets_in",
+        "number_packets_out",
+        "number_packets_total",
+
+        # first_and_last_30_pkts_stats()
+        "first_30_packets_in",
+        "first_30_packets_out",
+        "last_30_packets_in",
+        "last_30_packets_out",
+
+        # pkt_concentration_stats()
+        "packet_concentration_avg",
+        "packet_concentration_std",
+        "packet_concentration_median",
+        "packet_concentration_min",
+        "packet_concentration_max",
+
+        # number_per_sec()
+        "packets_per_second_avg",
+        "packets_per_second_std",
+        "packets_per_second_median",
+        "packets_per_second_min",
+        "packets_per_second_max",
+
+        # avg_pkt_ordering_stats()
+        "packet_ordering_in_avg",
+        "packet_ordering_out_avg",
+        "packet_ordering_in_std",
+        "packet_ordering_out_std",
+
+        # perc_inc_out()
+        "percentage_in",
+        "percentage_out",
+    ]
+
+    labels += [
+        "sum_interarrival_times",
+        "sum_time",
+        "sum_number_packets"
+    ]
+
+    labels.extend([f'alt_packet_concentration_{i}' for i in range(CHUNK_NUM_ALT_CONC + 1)])
+    labels.extend([f'alt_packets_per_second_{i}' for i in range(CHUNK_NUM_ALT_PER_SEC + 1)])
+
+    labels += [
+        "sum_alt_packet_concentration",
+        "sum_alt_packets_per_second",
+    ]
+
+    fixed_features_size = len(labels)
+
+    labels.extend([f'features_{i}' for i in range(TOTAL_FEATURES_MAX_SIZE - fixed_features_size)])
+
+    return labels
+
+
 if __name__ == "__main__":
     pass
