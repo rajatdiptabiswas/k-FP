@@ -309,7 +309,8 @@ def time_percentile_stats(Total):
 
 def number_pkt_stats(Total):
     In, Out = In_Out(Total)
-    return len(In), len(Out), len(Total)
+    stats = [len(In), len(Out), len(Total)]
+    return stats
 
 
 def first_and_last_30_pkts_stats(Total):
@@ -459,11 +460,11 @@ def TOTAL_FEATURES(list_data, max_size=175):
     # ------TIME--------
     intertimestats = [x for x in interarrival_maxminmeansd_stats(list_data)]
     timestats = time_percentile_stats(list_data)
-    number_pkts = list(number_pkt_stats(list_data))
     thirtypkts = first_and_last_30_pkts_stats(list_data)
     stdconc, avgconc, medconc, minconc, maxconc, conc = pkt_concentration_stats(
         list_data
     )
+    number_pkts = number_pkt_stats(list_data)
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
         number_per_sec(list_data)
     )
