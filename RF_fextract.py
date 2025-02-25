@@ -359,14 +359,15 @@ def pkt_concentration_stats(Total):
             if p[1] == 1:
                 c += 1
         concentrations.append(c)
-    return (
+    stats = [
         np.std(concentrations),
         sum(concentrations) / float(len(concentrations)),
         np.percentile(concentrations, 50),
         min(concentrations),
         max(concentrations),
         concentrations,
-    )
+    ]
+    return stats
 
 
 # Average number packets sent and received per second
@@ -471,11 +472,10 @@ def TOTAL_FEATURES(list_data, max_size=175):
     # ------TIME--------
     intertimestats = [x for x in interarrival_maxminmeansd_stats(list_data)]
     timestats = time_percentile_stats(list_data)
-    stdconc, avgconc, medconc, minconc, maxconc, conc = pkt_concentration_stats(
-        list_data
-    )
     number_pkts = number_pkt_stats(list_data)
     thirty_pkts = first_and_last_30_pkts_stats(list_data)
+    pkt_conc = pkt_concentration_stats(list_data)
+    std_conc, avg_conc, med_conc, min_conc, max_conc, conc = pkt_conc
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
         number_per_sec(list_data)
     )
@@ -484,12 +484,12 @@ def TOTAL_FEATURES(list_data, max_size=175):
     )
     perc_in, perc_out = perc_inc_out(list_data)
 
-    altconc = []
-    alt_per_sec = []
-    altconc = [sum(x) for x in chunkIt(conc, 70)]
+    # alt_conc = []
+    # alt_per_sec = []
+    alt_conc = [sum(x) for x in chunkIt(conc, 70)]
     alt_per_sec = [sum(x) for x in chunkIt(per_sec, 20)]
-    if len(altconc) == 70:
-        altconc.append(0)
+    if len(alt_conc) == 70:
+        alt_conc.append(0)
     if len(alt_per_sec) == 20:
         alt_per_sec.append(0)
 
@@ -508,25 +508,25 @@ def TOTAL_FEATURES(list_data, max_size=175):
     ALL_FEATURES.extend(intertimestats)
     ALL_FEATURES.extend(timestats)
     ALL_FEATURES.extend(number_pkts)
-    ALL_FEATURES.append(stdconc)
-    ALL_FEATURES.append(avgconc)
     ALL_FEATURES.extend(thirty_pkts)
+    ALL_FEATURES.append(std_conc)
+    ALL_FEATURES.append(avg_conc)
     ALL_FEATURES.append(avg_per_sec)
     ALL_FEATURES.append(std_per_sec)
     ALL_FEATURES.append(avg_order_in)
     ALL_FEATURES.append(avg_order_out)
     ALL_FEATURES.append(std_order_in)
     ALL_FEATURES.append(std_order_out)
-    ALL_FEATURES.append(medconc)
+    ALL_FEATURES.append(med_conc)
     ALL_FEATURES.append(med_per_sec)
     ALL_FEATURES.append(min_per_sec)
     ALL_FEATURES.append(max_per_sec)
-    ALL_FEATURES.append(maxconc)
+    ALL_FEATURES.append(max_conc)
     ALL_FEATURES.append(perc_in)
     ALL_FEATURES.append(perc_out)
-    ALL_FEATURES.extend(altconc)
+    ALL_FEATURES.extend(alt_conc)
     ALL_FEATURES.extend(alt_per_sec)
-    ALL_FEATURES.append(sum(altconc))
+    ALL_FEATURES.append(sum(alt_conc))
     ALL_FEATURES.append(sum(alt_per_sec))
     ALL_FEATURES.append(sum(intertimestats))
     ALL_FEATURES.append(sum(timestats))
