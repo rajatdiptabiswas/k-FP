@@ -435,7 +435,8 @@ def perc_inc_out(Total):
     In, Out = In_Out(Total)
     percentage_in = len(In) / float(len(Total))
     percentage_out = len(Out) / float(len(Total))
-    return percentage_in, percentage_out
+    stats = [percentage_in, percentage_out]
+    return stats
 
 
 ############### SIZE FEATURES #####################
@@ -507,6 +508,8 @@ def TOTAL_FEATURES(list_data, max_size=175):
     perc_in, perc_out = perc_inc_out(list_data)
     pkt_order_stats = avg_pkt_ordering_stats(list_data)
     avg_order_in, avg_order_out, std_order_in, std_order_out = pkt_order_stats
+    percentage_in_out = perc_inc_out(list_data)
+    perc_in, perc_out = percentage_in_out
 
     # alt_conc = []
     # alt_per_sec = []
