@@ -413,16 +413,16 @@ def avg_pkt_ordering_stats(Total):
     temp1 = []
     temp2 = []
     for p in Total:
-        if p[1] == 1:
+        if p[1] == 1:  # outgoing
             temp1.append(c1)
         c1 += 1
-        if p[1] == -1:
+        if p[1] == -1:  # incoming
             temp2.append(c2)
         c2 += 1
     avg_in = sum(temp1) / float(len(temp1))
     avg_out = sum(temp2) / float(len(temp2))
-
-    return avg_in, avg_out, np.std(temp1), np.std(temp2)
+    stats = [avg_in, avg_out, np.std(temp1), np.std(temp2)]
+    return stats
 
 
 def perc_inc_out(Total):
@@ -498,10 +498,9 @@ def TOTAL_FEATURES(list_data, max_size=175):
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
         num_pkts_per_sec
     )
-    avg_order_in, avg_order_out, std_order_in, std_order_out = avg_pkt_ordering_stats(
-        list_data
-    )
     perc_in, perc_out = perc_inc_out(list_data)
+    pkt_order_stats = avg_pkt_ordering_stats(list_data)
+    avg_order_in, avg_order_out, std_order_in, std_order_out = pkt_order_stats
 
     # alt_conc = []
     # alt_per_sec = []
