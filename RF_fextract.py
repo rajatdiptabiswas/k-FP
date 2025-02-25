@@ -394,7 +394,8 @@ def number_per_sec(Total):
         x = item - prev
         l.append(x)
     avg_number_per_sec = sum(l) / float(len(l))
-    return avg_number_per_sec, np.std(l), np.percentile(l, 50), min(l), max(l), l
+    stats = [avg_number_per_sec, np.std(l), np.percentile(l, 50), min(l), max(l), l]
+    return stats
 
 
 # Variant of packet ordering features from http://cacr.uwaterloo.ca/techreports/2014/cacr2014-05.pdf
@@ -473,6 +474,7 @@ def perc_inc_out(Total):
 
 ############### FEATURE FUNCTION #####################
 
+
 # If size information available add them in to function below
 def TOTAL_FEATURES(list_data, max_size=175):
     ALL_FEATURES = []
@@ -484,8 +486,9 @@ def TOTAL_FEATURES(list_data, max_size=175):
     thirty_pkts = first_and_last_30_pkts_stats(list_data)
     pkt_conc = pkt_concentration_stats(list_data)
     std_conc, avg_conc, med_conc, min_conc, max_conc, conc = pkt_conc
+    num_pkts_per_sec = number_per_sec(list_data)
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
-        number_per_sec(list_data)
+        num_pkts_per_sec
     )
     avg_order_in, avg_order_out, std_order_in, std_order_out = avg_pkt_ordering_stats(
         list_data
