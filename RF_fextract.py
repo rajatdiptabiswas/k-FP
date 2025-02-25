@@ -395,6 +395,14 @@ def number_per_sec(Total):
         l.append(x)
     avg_number_per_sec = sum(l) / float(len(l))
     stats = [avg_number_per_sec, np.std(l), np.percentile(l, 50), min(l), max(l), l]
+    stats_labels = [
+        "packets_per_second_avg",
+        "packets_per_second_std",
+        "packets_per_second_median",
+        "packets_per_second_min",
+        "packets_per_second_max",
+        "packets_per_second_list",
+    ]
     return stats
 
 
