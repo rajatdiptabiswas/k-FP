@@ -360,16 +360,16 @@ def pkt_concentration_stats(Total):
                 c += 1
         concentrations.append(c)
     stats = [
-        np.std(concentrations),
         sum(concentrations) / float(len(concentrations)),
+        np.std(concentrations),
         np.percentile(concentrations, 50),
         min(concentrations),
         max(concentrations),
         concentrations,
     ]
     stats_labels = [
-        "packet_concentration_std",
         "packet_concentration_avg",
+        "packet_concentration_std",
         "packet_concentration_median",
         "packet_concentration_min",
         "packet_concentration_max",
@@ -504,7 +504,7 @@ def TOTAL_FEATURES(list_data, max_size=175):
     number_pkts = number_pkt_stats(list_data)
     thirty_pkts = first_and_last_30_pkts_stats(list_data)
     pkt_conc = pkt_concentration_stats(list_data)
-    std_conc, avg_conc, med_conc, min_conc, max_conc, conc = pkt_conc
+    avg_conc, std_conc, med_conc, min_conc, max_conc, conc = pkt_conc
     num_pkts_per_sec = number_per_sec(list_data)
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
         num_pkts_per_sec
