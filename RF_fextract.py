@@ -10,6 +10,10 @@ from tqdm import tqdm
 global_X = None
 global_T = None
 
+TOTAL_FEATURES_MAX_SIZE = 175
+CHUNK_NUM_ALT_CONC = 70
+CHUNK_NUM_ALT_PER_SEC = 20
+
 
 def init_worker(X_shared, T_shared):
     """
@@ -495,7 +499,7 @@ def perc_inc_out(Total):
 
 
 # If size information available add them in to function below
-def TOTAL_FEATURES(list_data, max_size=175):
+def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     ALL_FEATURES = []
 
     # ------TIME--------
@@ -520,11 +524,11 @@ def TOTAL_FEATURES(list_data, max_size=175):
 
     # alt_conc = []
     # alt_per_sec = []
-    alt_conc = [sum(x) for x in chunkIt(conc, 70)]
-    alt_per_sec = [sum(x) for x in chunkIt(per_sec, 20)]
-    if len(alt_conc) == 70:
+    alt_conc = [sum(x) for x in chunkIt(conc, CHUNK_NUM_ALT_CONC)]
+    alt_per_sec = [sum(x) for x in chunkIt(per_sec, CHUNK_NUM_ALT_PER_SEC)]
+    if len(alt_conc) == CHUNK_NUM_ALT_CONC:
         alt_conc.append(0)
-    if len(alt_per_sec) == 20:
+    if len(alt_per_sec) == CHUNK_NUM_ALT_PER_SEC:
         alt_per_sec.append(0)
 
     # ------SIZE--------
