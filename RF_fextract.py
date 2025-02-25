@@ -503,14 +503,18 @@ def TOTAL_FEATURES(list_data, max_size=175):
     timestats = time_percentile_stats(list_data)
     number_pkts = number_pkt_stats(list_data)
     thirty_pkts = first_and_last_30_pkts_stats(list_data)
+
     pkt_conc = pkt_concentration_stats(list_data)
     avg_conc, std_conc, med_conc, min_conc, max_conc, conc = pkt_conc
+
     num_pkts_per_sec = number_per_sec(list_data)
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
         num_pkts_per_sec
     )
+
     pkt_order_stats = avg_pkt_ordering_stats(list_data)
     avg_order_in, avg_order_out, std_order_in, std_order_out = pkt_order_stats
+
     percentage_in_out = perc_inc_out(list_data)
     perc_in, perc_out = percentage_in_out
 
@@ -539,28 +543,40 @@ def TOTAL_FEATURES(list_data, max_size=175):
     ALL_FEATURES.extend(timestats)
     ALL_FEATURES.extend(number_pkts)
     ALL_FEATURES.extend(thirty_pkts)
-    ALL_FEATURES.append(std_conc)
+
+    # pkt_concentration_stats()
     ALL_FEATURES.append(avg_conc)
+    ALL_FEATURES.append(std_conc)
+    ALL_FEATURES.append(med_conc)
+    ALL_FEATURES.append(min_conc)
+    ALL_FEATURES.append(max_conc)
+
+    # number_per_sec()
     ALL_FEATURES.append(avg_per_sec)
     ALL_FEATURES.append(std_per_sec)
+    ALL_FEATURES.append(med_per_sec)
+    ALL_FEATURES.append(min_per_sec)
+    ALL_FEATURES.append(max_per_sec)
+
+    # avg_pkt_ordering_stats()
     ALL_FEATURES.append(avg_order_in)
     ALL_FEATURES.append(avg_order_out)
     ALL_FEATURES.append(std_order_in)
     ALL_FEATURES.append(std_order_out)
-    ALL_FEATURES.append(med_conc)
-    ALL_FEATURES.append(med_per_sec)
-    ALL_FEATURES.append(min_per_sec)
-    ALL_FEATURES.append(max_per_sec)
-    ALL_FEATURES.append(max_conc)
+
+    # perc_inc_out()
     ALL_FEATURES.append(perc_in)
     ALL_FEATURES.append(perc_out)
-    ALL_FEATURES.extend(alt_conc)
-    ALL_FEATURES.extend(alt_per_sec)
-    ALL_FEATURES.append(sum(alt_conc))
-    ALL_FEATURES.append(sum(alt_per_sec))
+
     ALL_FEATURES.append(sum(intertimestats))
     ALL_FEATURES.append(sum(timestats))
     ALL_FEATURES.append(sum(number_pkts))
+
+    ALL_FEATURES.extend(alt_conc)
+    ALL_FEATURES.extend(alt_per_sec)
+
+    ALL_FEATURES.append(sum(alt_conc))
+    ALL_FEATURES.append(sum(alt_per_sec))
 
     # SIZE FEATURES
     # ALL_FEATURES.append(tot_size)
