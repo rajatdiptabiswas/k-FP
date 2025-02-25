@@ -488,7 +488,7 @@ def TOTAL_FEATURES(list_data, max_size=175):
     ALL_FEATURES = []
 
     # ------TIME--------
-    intertimestats = [x for x in interarrival_maxminmeansd_stats(list_data)]
+    intertimestats = interarrival_maxminmeansd_stats(list_data)
     timestats = time_percentile_stats(list_data)
     number_pkts = number_pkt_stats(list_data)
     thirty_pkts = first_and_last_30_pkts_stats(list_data)
