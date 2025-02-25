@@ -310,6 +310,11 @@ def time_percentile_stats(Total):
 def number_pkt_stats(Total):
     In, Out = In_Out(Total)
     stats = [len(In), len(Out), len(Total)]
+    stats_labels = [
+        "number_packets_in",
+        "number_packets_out",
+        "number_packets_total",
+    ]
     return stats
 
 
