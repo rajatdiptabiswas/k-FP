@@ -176,9 +176,10 @@ def In_Out(list_data):
     In = []
     Out = []
     for p in list_data:
-        if p[1] == -1:
+        direction = int(np.sign(p[1]))
+        if direction == -1:
             In.append(p)
-        if p[1] == 1:
+        elif direction == 1:
             Out.append(p)
     return In, Out
 
