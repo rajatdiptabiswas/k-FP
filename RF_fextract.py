@@ -565,6 +565,7 @@ def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     list_direction_data = [(time, np.sign(size)) for (time, size) in list_data]
 
     # ------TIME--------
+
     intertimestats = interarrival_maxminmeansd_stats(list_direction_data)
     timestats = time_percentile_stats(list_direction_data)
     number_pkts = number_pkt_stats(list_direction_data)
@@ -591,18 +592,8 @@ def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     if len(alt_per_sec) == CHUNK_NUM_ALT_PER_SEC:
         alt_per_sec.append(0)
 
-    # ------SIZE--------
-    # tot_size = total_size(list_size_data)
-    # in_size, out_size = in_out_size(list_size_data)
-    # avg_total_size = average_total_pkt_size(list_size_data)
-    # avg_size_in, avg_size_out = average_in_out_pkt_size(list_size_data)
-    # var_total_size = variance_total_pkt_size(list_size_data)
-    # var_size_in, var_size_out = variance_in_out_pkt_size(list_size_data)
-    # std_total_size = std_total_pkt_size(list_size_data)
-    # std_size_in, std_size_out = std_in_out_pkt_size(list_size_data)
-    # max_size_in, max_size_out = max_in_out_pkt_size(list_size_data)
-
     # TIME FEATURES
+
     ALL_FEATURES.extend(intertimestats)
     ALL_FEATURES.extend(timestats)
     ALL_FEATURES.extend(number_pkts)
@@ -642,21 +633,51 @@ def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     ALL_FEATURES.append(sum(alt_conc))
     ALL_FEATURES.append(sum(alt_per_sec))
 
+    # ------SIZE--------
+
+    tot_size = total_size(list_size_data)
+    [in_size, out_size] = in_out_size(list_size_data)
+    avg_total_size = average_total_pkt_size(list_size_data)
+    [avg_size_in, avg_size_out] = average_in_out_pkt_size(list_size_data)
+    var_total_size = variance_total_pkt_size(list_size_data)
+    [var_size_in, var_size_out] = variance_in_out_pkt_size(list_size_data)
+    std_total_size = std_total_pkt_size(list_size_data)
+    [std_size_in, std_size_out] = std_in_out_pkt_size(list_size_data)
+    [max_size_in, max_size_out] = max_in_out_pkt_size(list_size_data)
+
     # SIZE FEATURES
-    # ALL_FEATURES.append(tot_size)
-    # ALL_FEATURES.append(in_size)
-    # ALL_FEATURES.append(out_size)
-    # ALL_FEATURES.append(avg_total_size)
-    # ALL_FEATURES.append(avg_size_in)
-    # ALL_FEATURES.append(avg_size_out)
-    # ALL_FEATURES.append(var_total_size)
-    # ALL_FEATURES.append(var_size_in)
-    # ALL_FEATURES.append(var_size_out)
-    # ALL_FEATURES.append(std_total_size)
-    # ALL_FEATURES.append(std_size_in)
-    # ALL_FEATURES.append(std_size_out)
-    # ALL_FEATURES.append(max_size_in)
-    # ALL_FEATURES.append(max_size_out)
+
+    # total_size()
+    ALL_FEATURES.append(tot_size)
+
+    # in_out_size()
+    ALL_FEATURES.append(in_size)
+    ALL_FEATURES.append(out_size)
+
+    # average_total_pkt_size()
+    ALL_FEATURES.append(avg_total_size)
+
+    # average_in_out_pkt_size()
+    ALL_FEATURES.append(avg_size_in)
+    ALL_FEATURES.append(avg_size_out)
+
+    # variance_total_pkt_size()
+    ALL_FEATURES.append(var_total_size)
+
+    # variance_in_out_pkt_size()
+    ALL_FEATURES.append(var_size_in)
+    ALL_FEATURES.append(var_size_out)
+
+    # std_total_pkt_size()
+    ALL_FEATURES.append(std_total_size)
+
+    # std_in_out_pkt_size()
+    ALL_FEATURES.append(std_size_in)
+    ALL_FEATURES.append(std_size_out)
+
+    # max_in_out_pkt_size()
+    ALL_FEATURES.append(max_size_in)
+    ALL_FEATURES.append(max_size_out)
 
     # This is optional, since all other features are of equal size this gives the first n features
     # of this particular feature subset, some may be padded with 0's if too short.
@@ -754,6 +775,40 @@ def kfp_feature_labels():
     labels += [
         "sum_alt_packet_concentration",
         "sum_alt_packets_per_second",
+    ]
+
+    labels += [
+        # total_size()
+        "packet_size_sum",
+
+        # in_out_size()
+        "packet_size_sum_in",
+        "packet_size_sum_out",
+
+        # average_total_pkt_size()
+        "packet_size_avg",
+
+        # average_in_out_pkt_size()
+        "packet_size_avg_in",
+        "packet_size_avg_out",
+
+        # variance_total_pkt_size()
+        "packet_size_var",
+
+        # variance_in_out_pkt_size()
+        "packet_size_var_in",
+        "packet_size_var_out",
+
+        # std_total_pkt_size()
+        "packet_size_std",
+
+        # std_in_out_pkt_size()
+        "packet_size_std_in",
+        "packet_size_std_out",
+
+        # max_in_out_pkt_size()
+        "packet_size_max_in",
+        "packet_size_max_out"
     ]
 
     fixed_features_size = len(labels)
