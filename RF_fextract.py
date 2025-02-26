@@ -100,7 +100,7 @@ def kfp_features(X, T, y, seed=None):
 
         results = list(pbar)
 
-    # # Sequential processing.
+    # Sequential processing.
     # global global_X, global_T
     # global_X, global_T = X, T
 
@@ -517,28 +517,29 @@ def perc_inc_out(Total):
 def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     ALL_FEATURES = []
 
-    # ------TIME--------
-    intertimestats = interarrival_maxminmeansd_stats(list_data)
-    timestats = time_percentile_stats(list_data)
-    number_pkts = number_pkt_stats(list_data)
-    thirty_pkts = first_and_last_30_pkts_stats(list_data)
+    list_size_data      = list_data
+    list_direction_data = [(time, np.sign(size)) for (time, size) in list_data]
 
-    pkt_conc = pkt_concentration_stats(list_data)
+    # ------TIME--------
+    intertimestats = interarrival_maxminmeansd_stats(list_direction_data)
+    timestats = time_percentile_stats(list_direction_data)
+    number_pkts = number_pkt_stats(list_direction_data)
+    thirty_pkts = first_and_last_30_pkts_stats(list_direction_data)
+
+    pkt_conc = pkt_concentration_stats(list_direction_data)
     avg_conc, std_conc, med_conc, min_conc, max_conc, conc = pkt_conc
 
-    num_pkts_per_sec = number_per_sec(list_data)
+    num_pkts_per_sec = number_per_sec(list_direction_data)
     avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
         num_pkts_per_sec
     )
 
-    pkt_order_stats = avg_pkt_ordering_stats(list_data)
+    pkt_order_stats = avg_pkt_ordering_stats(list_direction_data)
     avg_order_in, avg_order_out, std_order_in, std_order_out = pkt_order_stats
 
-    percentage_in_out = perc_inc_out(list_data)
+    percentage_in_out = perc_inc_out(list_direction_data)
     perc_in, perc_out = percentage_in_out
 
-    # alt_conc = []
-    # alt_per_sec = []
     alt_conc = [sum(x) for x in chunkIt(conc, CHUNK_NUM_ALT_CONC)]
     alt_per_sec = [sum(x) for x in chunkIt(per_sec, CHUNK_NUM_ALT_PER_SEC)]
     if len(alt_conc) == CHUNK_NUM_ALT_CONC:
@@ -547,15 +548,15 @@ def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
         alt_per_sec.append(0)
 
     # ------SIZE--------
-    # tot_size = total_size(list_data)
-    # in_size, out_size = in_out_size(list_data)
-    # avg_total_size = average_total_pkt_size(list_data)
-    # avg_size_in, avg_size_out = average_in_out_pkt_size(list_data)
-    # var_total_size = variance_total_pkt_size(list_data)
-    # var_size_in, var_size_out = variance_in_out_pkt_size(list_data)
-    # std_total_size = std_total_pkt_size(list_data)
-    # std_size_in, std_size_out = std_in_out_pkt_size(list_data)
-    # max_size_in, max_size_out = max_in_out_pkt_size(list_data)
+    # tot_size = total_size(list_size_data)
+    # in_size, out_size = in_out_size(list_size_data)
+    # avg_total_size = average_total_pkt_size(list_size_data)
+    # avg_size_in, avg_size_out = average_in_out_pkt_size(list_size_data)
+    # var_total_size = variance_total_pkt_size(list_size_data)
+    # var_size_in, var_size_out = variance_in_out_pkt_size(list_size_data)
+    # std_total_size = std_total_pkt_size(list_size_data)
+    # std_size_in, std_size_out = std_in_out_pkt_size(list_size_data)
+    # max_size_in, max_size_out = max_in_out_pkt_size(list_size_data)
 
     # TIME FEATURES
     ALL_FEATURES.extend(intertimestats)

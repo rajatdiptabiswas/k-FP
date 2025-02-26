@@ -56,7 +56,7 @@ def load_dataset(input_dir: str, max_length=8000):
         - max_length (int): Maximum sequence length. Shorter traces are padded.
 
     Returns:
-        - X (np.ndarray): Packet direction sequences (1 for outgoing, -1 for incoming), shape (N, max_length), padded with 0.
+        - X (np.ndarray): Packet size sequences (1 for outgoing, -1 for incoming), shape (N, max_length), padded with 0.
         - T (np.ndarray): Packet timestamps, shape (N, max_length), padded with -1.
         - y (np.ndarray): Integer website labels, shape (N,).
     """
@@ -75,9 +75,10 @@ def load_dataset(input_dir: str, max_length=8000):
             data = np.expand_dims(data, axis=0)
 
         T = data[:, 0]  # First column: timestamps
-        X = np.sign(
-            data[:, 1]
-        )  # Convert packet sizes to direction: 1 (outgoing), -1 (incoming)
+        X = data[:, 1]  # Second column: ±size, +ve (outgoing), -ve (incoming)
+        # X = np.sign(
+        #     data[:, 1]
+        # )  # Convert packet sizes to direction: 1 (outgoing), -1 (incoming)
 
         # Pad sequences to max_length
         T_padded = np.full(max_length, -1.0, dtype=np.float32)
@@ -180,6 +181,20 @@ if __name__ == "__main__":
         [ 1., -1.,  1., ...,  0.,  0.,  0.]
     ], shape=(5, 5000))
 
+    X: Packet size sequences for 20910 traces, each of length 5000, padded with 0
+    >>> X.shape
+    (20910, 5000)
+    >>> X[:5]
+    array([
+        [   74.,   -74.,    66., ...,     0.,     0.,     0.],
+        [   74.,   -74.,    66., ...,   594.,   582.,   591.],
+        [   74.,   -74.,    66., ...,     0.,     0.,     0.],
+        [   74.,   -74.,    66., ..., -1469.,    66.,   -66.],
+        [   74.,   -74.,    66., ...,     0.,     0.,     0.]
+    ], shape=(5, 5000), dtype=float32)
+
+    --------------------
+
     T: Corresponding packet timestamps, each of length 5000, padded with -1
     >>> T.shape
     (20910, 5000)
@@ -191,6 +206,8 @@ if __name__ == "__main__":
         [ 0. , 0.212338, 0.283137, ..., 11.033474, 11.033477, 11.069212],
         [ 0. , 0.12259 , 0.189454, ..., -1.      , -1.      , -1.      ]
     ], shape=(5, 5000))
+
+    --------------------
 
     y: Website labels corresponding to each trace
     >>> y.shape
