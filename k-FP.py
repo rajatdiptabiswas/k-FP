@@ -134,14 +134,14 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     # print("FEATURE LABELS")
     # for label, feature in list(zip(feature_labels, tr_data[0])):
     #     if feature.is_integer():
-    #         print(f"{int(feature):>15}    {label:<30}")
+    #         print(f"{int(feature):>20}    {label:<30}")
     #     else:
-    #         print(f"{feature:15.10f}    {label:<30}")
+    #         print(f"{feature:20.10f}    {label:<30}")
     # print()
 
     print("FEATURE IMPORTANCE SCORES")
     for score, label in sorted(
-        list(zip(importance_scores, feature_labels))[:20], reverse=True
+        list(zip(importance_scores, feature_labels))[:25], reverse=True
     ):
         print(f"{score:>1.10f}    {label}")
     print()
