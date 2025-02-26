@@ -465,50 +465,93 @@ def perc_inc_out(Total):
 
 ############### SIZE FEATURES #####################
 
-# def total_size(list_data):
-#    return sum([x[1] for x in list_data])
 
-# def in_out_size(list_data):
-#    In, Out = In_Out(list_data)
-#    size_in = sum([x[1] for x in In])
-#    size_out = sum([x[1] for x in Out])
-#    return size_in, size_out
+def total_size(list_data):
+    stat = sum([abs(x[1]) for x in list_data])
+    stat_label = "packet_size_sum"
+    return stat
 
-# def average_total_pkt_size(list_data):
-#    return np.mean([x[1] for x in list_data])
 
-# def average_in_out_pkt_size(list_data):
-#    In, Out = In_Out(list_data)
-#    average_size_in = np.mean([x[1] for x in In])
-#    average_size_out = np.mean([x[1] for x in Out])
-#    return average_size_in, average_size_out
+def in_out_size(list_data):
+    In, Out = In_Out(list_data)
+    size_in = sum([abs(x[1]) for x in In])
+    size_out = sum([abs(x[1]) for x in Out])
+    stats = [size_in, size_out]
+    stats_labels = [
+        "packet_size_sum_in",
+        "packet_size_sum_out"
+    ]
+    return stats
 
-# def variance_total_pkt_size(list_data):
-#    return np.var([x[1] for x in list_data])
 
-# def variance_in_out_pkt_size(list_data):
-#    In, Out = In_Out(list_data)
-#    var_size_in = np.var([x[1] for x in In])
-#    var_size_out = np.var([x[1] for x in Out])
-#    return var_size_in, var_size_out
+def average_total_pkt_size(list_data):
+    stat = np.mean([abs(x[1]) for x in list_data])
+    stat_label = "packet_size_avg"
+    return stat
 
-# def std_total_pkt_size(list_data):
-#    return np.std([x[1] for x in list_data])
 
-# def std_in_out_pkt_size(list_data):
-#    In, Out = In_Out(list_data)
-#    std_size_in = np.std([x[1] for x in In])
-#    std_size_out = np.std([x[1] for x in Out])
-#    return std_size_in, std_size_out
+def average_in_out_pkt_size(list_data):
+    In, Out = In_Out(list_data)
+    average_size_in = np.mean([abs(x[1]) for x in In])
+    average_size_out = np.mean([abs(x[1]) for x in Out])
+    stats = [average_size_in, average_size_out]
+    stats_labels = [
+        "packet_size_avg_in",
+        "packet_size_avg_out"
+    ]
+    return stats
 
-# def max_in_out_pkt_size(list_data):
-#    In, Out = In_Out(list_data)
-#    max_size_in = max([x[1] for x in In])
-#    max_size_out = max([x[1] for x in Out])
-#    return max_size_in, max_size_out
 
-# def unique_pkt_lengths(list_data):
-#    pass
+def variance_total_pkt_size(list_data):
+    stat = np.var([abs(x[1]) for x in list_data])
+    stat_label = "packet_size_var"
+    return stat
+
+
+def variance_in_out_pkt_size(list_data):
+    In, Out = In_Out(list_data)
+    var_size_in = np.var([abs(x[1]) for x in In])
+    var_size_out = np.var([abs(x[1]) for x in Out])
+    stats = [var_size_in, var_size_out]
+    stats_labels = [
+        "packet_size_var_in",
+        "packet_size_var_out"
+    ]
+    return stats
+
+
+def std_total_pkt_size(list_data):
+    stat = np.std([abs(x[1]) for x in list_data])
+    stat_label = "packet_size_std"
+    return stat
+
+
+def std_in_out_pkt_size(list_data):
+    In, Out = In_Out(list_data)
+    std_size_in = np.std([abs(x[1]) for x in In])
+    std_size_out = np.std([abs(x[1]) for x in Out])
+    stats = [std_size_in, std_size_out]
+    stats_labels = [
+        "packet_size_std_in",
+        "packet_size_std_out"
+    ]
+    return stats
+
+
+def max_in_out_pkt_size(list_data):
+    In, Out = In_Out(list_data)
+    max_size_in = max([abs(x[1]) for x in In])
+    max_size_out = max([abs(x[1]) for x in Out])
+    stats = [max_size_in, max_size_out]
+    stats_labels = [
+        "packet_size_max_in",
+        "packet_size_max_out"
+    ]
+    return stats
+
+
+def unique_pkt_lengths(list_data):
+    return list(set([abs(x[1]) for x in list_data]))
 
 
 ############### FEATURE FUNCTION #####################
