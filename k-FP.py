@@ -5,6 +5,7 @@ import dill
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.inspection import permutation_importance
 from RF_fextract import kfp_features, kfp_feature_labels
 
 
@@ -148,6 +149,18 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
 
     print(f"VALIDATION ACCURACY : {model.score(val_data, val_label)}")
     print(f"TESTING ACCURACY    : {model.score(te_data, te_label)}")
+    print()
+
+    result = permutation_importance(
+        model, te_data, te_label, n_repeats=10, random_state=seed
+    )
+
+    print("PERMUTATION IMPORTANCE SCORES")
+    for score, label in sorted(
+        list(zip(result.importances_mean, feature_labels))[:25], reverse=True
+    ):
+        print(f"{score:>1.10f}    {label}")
+    print()
 
 
 if __name__ == "__main__":
