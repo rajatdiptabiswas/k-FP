@@ -700,8 +700,12 @@ def kfp_feature_labels():
         "sum_number_packets"
     ]
 
-    labels.extend([f'alt_packet_concentration_{i}' for i in range(CHUNK_NUM_ALT_CONC + 1)])
-    labels.extend([f'alt_packets_per_second_{i}' for i in range(CHUNK_NUM_ALT_PER_SEC + 1)])
+    labels.extend(
+        [f"alt_packet_concentration_{i}" for i in range(CHUNK_NUM_ALT_CONC + 1)]
+    )
+    labels.extend(
+        [f"alt_packets_per_second_{i}" for i in range(CHUNK_NUM_ALT_PER_SEC + 1)]
+    )
 
     labels += [
         "sum_alt_packet_concentration",
@@ -710,7 +714,9 @@ def kfp_feature_labels():
 
     fixed_features_size = len(labels)
 
-    labels.extend([f'features_{i}' for i in range(TOTAL_FEATURES_MAX_SIZE - fixed_features_size)])
+    labels.extend(
+        [f"features_{i}" for i in range(TOTAL_FEATURES_MAX_SIZE - fixed_features_size)]
+    )
 
     return labels
 
