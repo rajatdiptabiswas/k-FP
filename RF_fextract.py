@@ -446,7 +446,7 @@ def avg_pkt_ordering_stats(Total):
         "packet_ordering_in_avg",
         "packet_ordering_out_avg",
         "packet_ordering_in_std",
-        "packet_ordering_out_std"
+        "packet_ordering_out_std",
     ]
     return stats
 
@@ -458,7 +458,7 @@ def perc_inc_out(Total):
     stats = [percentage_in, percentage_out]
     stats_labels = [
         "percentage_in",
-        "percentage_out"
+        "percentage_out",
     ]
     return stats
 
@@ -479,7 +479,7 @@ def in_out_size(list_data):
     stats = [size_in, size_out]
     stats_labels = [
         "packet_size_sum_in",
-        "packet_size_sum_out"
+        "packet_size_sum_out",
     ]
     return stats
 
@@ -497,7 +497,7 @@ def average_in_out_pkt_size(list_data):
     stats = [average_size_in, average_size_out]
     stats_labels = [
         "packet_size_avg_in",
-        "packet_size_avg_out"
+        "packet_size_avg_out",
     ]
     return stats
 
@@ -515,7 +515,7 @@ def variance_in_out_pkt_size(list_data):
     stats = [var_size_in, var_size_out]
     stats_labels = [
         "packet_size_var_in",
-        "packet_size_var_out"
+        "packet_size_var_out",
     ]
     return stats
 
@@ -533,7 +533,7 @@ def std_in_out_pkt_size(list_data):
     stats = [std_size_in, std_size_out]
     stats_labels = [
         "packet_size_std_in",
-        "packet_size_std_out"
+        "packet_size_std_out",
     ]
     return stats
 
@@ -545,7 +545,7 @@ def max_in_out_pkt_size(list_data):
     stats = [max_size_in, max_size_out]
     stats_labels = [
         "packet_size_max_in",
-        "packet_size_max_out"
+        "packet_size_max_out",
     ]
     return stats
 
@@ -758,7 +758,7 @@ def kfp_feature_labels():
     labels += [
         "sum_interarrival_times",
         "sum_time",
-        "sum_number_packets"
+        "sum_number_packets",
     ]
 
     labels.extend(
@@ -804,7 +804,7 @@ def kfp_feature_labels():
 
         # max_in_out_pkt_size()
         "packet_size_max_in",
-        "packet_size_max_out"
+        "packet_size_max_out",
     ]
 
     fixed_features_size = len(labels)
