@@ -110,14 +110,14 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     [[n features], (class label, instance)]
     """
 
-    tr_data, tr_label = list(zip(*train_set))
-    tr_label = list(zip(*tr_label))[0]
+    tr_data, tr_label = zip(*train_set)
+    tr_data, tr_label = list(tr_data), [label[0] for label in tr_label]
 
-    val_data, val_label = list(zip(*valid_set))
-    val_label = list(zip(*val_label))[0]
+    val_data, val_label = zip(*valid_set)
+    val_data, val_label = list(val_data), [label[0] for label in val_label]
 
-    te_data, te_label = list(zip(*test_set))
-    te_label = list(zip(*te_label))[0]
+    te_data, te_label = zip(*test_set)
+    te_data, te_label = list(te_data), [label[0] for label in te_label]
 
     print("Training...")
     model = RandomForestClassifier(
