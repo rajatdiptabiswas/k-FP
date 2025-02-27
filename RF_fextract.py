@@ -570,20 +570,16 @@ def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     timestats = time_percentile_stats(list_direction_data)
     number_pkts = number_pkt_stats(list_direction_data)
     thirty_pkts = first_and_last_30_pkts_stats(list_direction_data)
-
-    pkt_conc = pkt_concentration_stats(list_direction_data)
-    avg_conc, std_conc, med_conc, min_conc, max_conc, conc = pkt_conc
-
-    num_pkts_per_sec = number_per_sec(list_direction_data)
-    avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec = (
-        num_pkts_per_sec
+    [avg_conc, std_conc, med_conc, min_conc, max_conc, conc] = (
+        pkt_concentration_stats(list_direction_data)
     )
-
-    pkt_order_stats = avg_pkt_ordering_stats(list_direction_data)
-    avg_order_in, avg_order_out, std_order_in, std_order_out = pkt_order_stats
-
-    percentage_in_out = perc_inc_out(list_direction_data)
-    perc_in, perc_out = percentage_in_out
+    [avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec] = (
+        number_per_sec(list_direction_data)
+    )
+    [avg_order_in, avg_order_out, std_order_in, std_order_out] = (
+        avg_pkt_ordering_stats(list_direction_data)
+    )
+    [perc_in, perc_out] = perc_inc_out(list_direction_data)
 
     alt_conc = [sum(x) for x in chunkIt(conc, CHUNK_NUM_ALT_CONC)]
     alt_per_sec = [sum(x) for x in chunkIt(per_sec, CHUNK_NUM_ALT_PER_SEC)]
