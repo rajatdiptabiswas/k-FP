@@ -117,18 +117,18 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     te_data, te_label = zip(*test_set)
     te_data, te_label = list(te_data), [label[0] for label in te_label]
 
-    print("Training...")
+    print("Training...\n")
     model = RandomForestClassifier(
         n_jobs=-1, n_estimators=num_trees, oob_score=True, random_state=seed
     )
     model.fit(tr_data, tr_label)
 
-    feature_labels = kfp_feature_labels()
-    importance_scores = model.feature_importances_
+    print(f"VALIDATION ACCURACY : {model.score(val_data, val_label)}")
+    print(f"TESTING ACCURACY    : {model.score(te_data, te_label)}")
+    print()
 
-    crs = DATASET_DIRECTORY.strip("/").split("/")[-3]
-    websites = DATASET_DIRECTORY.strip("/").rsplit("/", maxsplit=1)[-1]
-    print(f"\n{crs.upper()} / {websites.upper()}\n")
+    feature_labels = kfp_feature_labels()
+    feature_importance_scores = model.feature_importances_
 
     # print("FEATURE LABELS")
     # for label, feature in list(zip(feature_labels, tr_data[0])):
@@ -140,22 +140,18 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
 
     print("FEATURE IMPORTANCE SCORES")
     for score, label in sorted(
-        list(zip(importance_scores, feature_labels))[:25], reverse=True
+        list(zip(feature_importance_scores, feature_labels))[:25], reverse=True
     ):
         print(f"{score:>1.10f}    {label}")
     print()
 
-    print(f"VALIDATION ACCURACY : {model.score(val_data, val_label)}")
-    print(f"TESTING ACCURACY    : {model.score(te_data, te_label)}")
-    print()
-
-    result = permutation_importance(
+    permutation_importance_scores = permutation_importance(
         model, te_data, te_label, n_repeats=10, random_state=seed
     )
 
     print("PERMUTATION IMPORTANCE SCORES")
     for score, label in sorted(
-        list(zip(result.importances_mean, feature_labels))[:25], reverse=True
+        list(zip(permutation_importance_scores.importances_mean, feature_labels))[:25], reverse=True
     ):
         print(f"{score:>1.10f}    {label}")
     print()
