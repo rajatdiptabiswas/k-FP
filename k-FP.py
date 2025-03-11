@@ -240,14 +240,18 @@ def kfp(dataset_directory: str):
     )
 
 
-if __name__ == "__main__":
-    DATASET_DIRECTORY = "/Users/rajat/website-fingerprinting/"
+def main():
+    dataset_directory = "/Users/rajat/website-fingerprinting/"
 
     crs_list = ["slitheen"]
     site_list = ["example-neverssl", "example-overt", "neverssl-overt"]
 
     for crs in crs_list:
         for site in site_list:
-            directory = DATASET_DIRECTORY + f"{crs}/dataset/{site}"
+            directory = dataset_directory + f"{crs}/dataset/{site}"
             print(f"\n{crs.upper()} / {site.upper()}\n")
             kfp(directory)
+
+
+if __name__ == "__main__":
+    main()
