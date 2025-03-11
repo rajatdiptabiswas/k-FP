@@ -1,15 +1,13 @@
 import code
 import random
 import os
-import dill
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.inspection import permutation_importance
 from RF_fextract import kfp_features, kfp_feature_labels
-
-
-DATASET_DIRECTORY = "/Users/rajat/website-fingerprinting/slitheen/dataset/"
 
 
 def load_dataset(input_dir: str, max_length=8000):
@@ -57,7 +55,7 @@ def load_dataset(input_dir: str, max_length=8000):
         - max_length (int): Maximum sequence length. Shorter traces are padded.
 
     Returns:
-        - X (np.ndarray): Packet size sequences (1 for outgoing, -1 for incoming), shape (N, max_length), padded with 0.
+        - X (np.ndarray): Packet size sequences (+ve for outgoing, -ve for incoming), shape (N, max_length), padded with 0.
         - T (np.ndarray): Packet timestamps, shape (N, max_length), padded with -1.
         - y (np.ndarray): Integer website labels, shape (N,).
     """
@@ -163,7 +161,7 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     print()
 
 
-if __name__ == "__main__":
+def kfp(dataset_directory: str):
     # Set `random` seed value for reproducibility
     seed = 0
     random.seed(seed)
@@ -179,21 +177,9 @@ if __name__ == "__main__":
     # with open("./y.dill", "rb") as file:
     #     y = dill.load(file)
 
-    X, T, y = load_dataset(DATASET_DIRECTORY)
+    X, T, y = load_dataset(dataset_directory)
 
     """
-    X: Packet direction sequences for 20910 traces, each of length 5000, padded with 0
-    >>> X.shape
-    (20910, 5000)
-    >>> X[:5]
-    array([
-        [ 1., -1.,  1., ...,  0.,  0.,  0.],
-        [ 1., -1.,  1., ..., -1., -1., -1.],
-        [ 1., -1.,  1., ...,  0.,  0.,  0.],
-        [ 1., -1.,  1., ..., -1., -1.,  1.],
-        [ 1., -1.,  1., ...,  0.,  0.,  0.]
-    ], shape=(5, 5000))
-
     X: Packet size sequences for 20910 traces, each of length 5000, padded with 0
     >>> X.shape
     (20910, 5000)
@@ -256,3 +242,16 @@ if __name__ == "__main__":
     RF_closedworld(
         train_set=train_set, valid_set=valid_set, test_set=test_set, seed=seed
     )
+
+
+if __name__ == "__main__":
+    DATASET_DIRECTORY = "/Users/rajat/website-fingerprinting/"
+
+    crs_list = ["slitheen"]
+    site_list = ["example-neverssl", "example-overt", "neverssl-overt"]
+
+    for crs in crs_list:
+        for site in site_list:
+            directory = DATASET_DIRECTORY + f"{crs}/dataset/{site}"
+            print(f"\n{crs.upper()} / {site.upper()}\n")
+            kfp(directory)
