@@ -128,6 +128,8 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     print()
 
     feature_labels = kfp_feature_labels()
+    assert len(feature_labels) == len(tr_data[0]), f"Feature label size ({len(feature_labels)}) does not match feature vector size ({len(tr_data[0])})"
+
     feature_importance_scores = model.feature_importances_
 
     # print("FEATURE LABELS")
