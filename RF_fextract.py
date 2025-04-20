@@ -22,11 +22,11 @@ ORIGINAL_FEATURES_MAX_SIZE = 175
 
 FEATURES_MAX_SIZE = 0
 if TIME_FEATURES:
-    FEATURES_MAX_SIZE += 26
+    FEATURES_MAX_SIZE += 26 - 4 - 4
 if NUMBER_FEATURES:
-    FEATURES_MAX_SIZE += 24
+    FEATURES_MAX_SIZE += 24 - 1
 if SIZE_FEATURES:
-    FEATURES_MAX_SIZE += 14
+    FEATURES_MAX_SIZE += 14 - 4
 if ALTERNATE_FEATURES:
     FEATURES_MAX_SIZE += CHUNK_NUM_ALT_CONC
     FEATURES_MAX_SIZE += CHUNK_NUM_ALT_PER_SEC
@@ -246,16 +246,16 @@ def interarrival_maxminmeansd_stats(list_data):
             [
                 max(In),
                 max(Out),
-                max(Total),
+                # max(Total),
                 avg_in,
                 avg_out,
-                avg_total,
+                # avg_total,
                 np.std(In),
                 np.std(Out),
-                np.std(Total),
+                # np.std(Total),
                 np.percentile(In, 75),
                 np.percentile(Out, 75),
-                np.percentile(Total, 75),
+                # np.percentile(Total, 75),
             ]
         )
     elif Out and not In:
@@ -265,16 +265,16 @@ def interarrival_maxminmeansd_stats(list_data):
             [
                 0,
                 max(Out),
-                max(Total),
+                # max(Total),
                 0,
                 avg_out,
-                avg_total,
+                # avg_total,
                 0,
                 np.std(Out),
-                np.std(Total),
+                # np.std(Total),
                 0,
                 np.percentile(Out, 75),
-                np.percentile(Total, 75),
+                # np.percentile(Total, 75),
             ]
         )
     elif In and not Out:
@@ -284,16 +284,16 @@ def interarrival_maxminmeansd_stats(list_data):
             [
                 max(In),
                 0,
-                max(Total),
+                # max(Total),
                 avg_in,
                 0,
-                avg_total,
+                # avg_total,
                 np.std(In),
                 0,
-                np.std(Total),
+                # np.std(Total),
                 np.percentile(In, 75),
                 0,
-                np.percentile(Total, 75),
+                # np.percentile(Total, 75),
             ]
         )
     else:
@@ -335,13 +335,13 @@ def time_percentile_stats(Total):
         stats.append(np.percentile(Out1, 100))
     if not Out1:
         stats.extend(([0] * 4))
-    if Total1:
-        stats.append(np.percentile(Total1, 25))  # return 25th percentile
-        stats.append(np.percentile(Total1, 50))
-        stats.append(np.percentile(Total1, 75))
-        stats.append(np.percentile(Total1, 100))
-    if not Total1:
-        stats.extend(([0] * 4))
+    # if Total1:
+    #     stats.append(np.percentile(Total1, 25))  # return 25th percentile
+    #     stats.append(np.percentile(Total1, 50))
+    #     stats.append(np.percentile(Total1, 75))
+    #     stats.append(np.percentile(Total1, 100))
+    # if not Total1:
+    #     stats.extend(([0] * 4))
     return stats
 
 
@@ -350,7 +350,7 @@ def number_pkt_stats(Total):
     stats = [
         len(In),
         len(Out),
-        len(Total)
+        # len(Total)
     ]
     stats_labels = [
         "number_packets_in",
@@ -667,28 +667,28 @@ def TOTAL_FEATURES(list_data, time_features=TIME_FEATURES, number_features=NUMBE
         [max_size_in, max_size_out] = max_in_out_pkt_size(list_size_data)
 
         # total_size()
-        ALL_FEATURES.append(tot_size)
+        # ALL_FEATURES.append(tot_size)
 
         # in_out_size()
         ALL_FEATURES.append(in_size)
         ALL_FEATURES.append(out_size)
 
         # average_total_pkt_size()
-        ALL_FEATURES.append(avg_total_size)
+        # ALL_FEATURES.append(avg_total_size)
 
         # average_in_out_pkt_size()
         ALL_FEATURES.append(avg_size_in)
         ALL_FEATURES.append(avg_size_out)
 
         # variance_total_pkt_size()
-        ALL_FEATURES.append(var_total_size)
+        # ALL_FEATURES.append(var_total_size)
 
         # variance_in_out_pkt_size()
         ALL_FEATURES.append(var_size_in)
         ALL_FEATURES.append(var_size_out)
 
         # std_total_pkt_size()
-        ALL_FEATURES.append(std_total_size)
+        # ALL_FEATURES.append(std_total_size)
 
         # std_in_out_pkt_size()
         ALL_FEATURES.append(std_size_in)
@@ -716,21 +716,21 @@ def kfp_feature_labels(time_features=TIME_FEATURES, number_features=NUMBER_FEATU
 
     if time_features:
         labels += [
-            # interarrival_maxminmeansd_stats() × 12
+            # interarrival_maxminmeansd_stats() × 12-4
             "interarrival_times_max_in",
             "interarrival_times_max_out",
-            "interarrival_times_max_total",
+            # "interarrival_times_max_total",
             "interarrival_times_avg_in",
             "interarrival_times_avg_out",
-            "interarrival_times_avg_total",
+            # "interarrival_times_avg_total",
             "interarrival_times_std_in",
             "interarrival_times_std_out",
-            "interarrival_times_std_total",
+            # "interarrival_times_std_total",
             "interarrival_times_75th_percentile_in",
             "interarrival_times_75th_percentile_out",
-            "interarrival_times_75th_percentile_total",
+            # "interarrival_times_75th_percentile_total",
 
-            # time_percentile_stats() × 12
+            # time_percentile_stats() × 12-4
             "time_25th_percentile_in",
             "time_50th_percentile_in",
             "time_75th_percentile_in",
@@ -739,10 +739,10 @@ def kfp_feature_labels(time_features=TIME_FEATURES, number_features=NUMBER_FEATU
             "time_50th_percentile_out",
             "time_75th_percentile_out",
             "time_100th_percentile_out",
-            "time_25th_percentile_total",
-            "time_50th_percentile_total",
-            "time_75th_percentile_total",
-            "time_100th_percentile_total",
+            # "time_25th_percentile_total",
+            # "time_50th_percentile_total",
+            # "time_75th_percentile_total",
+            # "time_100th_percentile_total",
 
             "sum_interarrival_times",
             "sum_time",
@@ -750,10 +750,10 @@ def kfp_feature_labels(time_features=TIME_FEATURES, number_features=NUMBER_FEATU
 
     if number_features:
         labels += [
-            # number_pkt_stats() × 3
+            # number_pkt_stats() × 3-1
             "number_packets_in",
             "number_packets_out",
-            "number_packets_total",
+            # "number_packets_total",
 
             "sum_number_packets",
 
@@ -803,29 +803,29 @@ def kfp_feature_labels(time_features=TIME_FEATURES, number_features=NUMBER_FEATU
 
     if size_features:
         labels += [
-            # total_size() × 1
-            "packet_size_sum",
+            # total_size() × 1-1
+            # "packet_size_sum",
 
             # in_out_size() × 2
             "packet_size_sum_in",
             "packet_size_sum_out",
 
-            # average_total_pkt_size() × 1
-            "packet_size_avg",
+            # average_total_pkt_size() × 1-1
+            # "packet_size_avg",
 
             # average_in_out_pkt_size() × 2
             "packet_size_avg_in",
             "packet_size_avg_out",
 
-            # variance_total_pkt_size() × 1
-            "packet_size_var",
+            # variance_total_pkt_size() × 1-1
+            # "packet_size_var",
 
             # variance_in_out_pkt_size() × 2
             "packet_size_var_in",
             "packet_size_var_out",
 
-            # std_total_pkt_size() × 1
-            "packet_size_std",
+            # std_total_pkt_size() × 1-1
+            # "packet_size_std",
 
             # std_in_out_pkt_size() × 2
             "packet_size_std_in",
