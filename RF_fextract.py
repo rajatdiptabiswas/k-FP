@@ -10,9 +10,28 @@ from tqdm import tqdm
 global_X = None
 global_T = None
 
-TOTAL_FEATURES_MAX_SIZE = 175
+TIME_FEATURES = True
+NUMBER_FEATURES = True
+SIZE_FEATURES = True
+ALTERNATE_FEATURES = True and NUMBER_FEATURES
+
 CHUNK_NUM_ALT_CONC = 70
 CHUNK_NUM_ALT_PER_SEC = 20
+
+ORIGINAL_FEATURES_MAX_SIZE = 175
+
+FEATURES_MAX_SIZE = 0
+if TIME_FEATURES:
+    FEATURES_MAX_SIZE += 26
+if NUMBER_FEATURES:
+    FEATURES_MAX_SIZE += 24
+if SIZE_FEATURES:
+    FEATURES_MAX_SIZE += 14
+if ALTERNATE_FEATURES:
+    FEATURES_MAX_SIZE += CHUNK_NUM_ALT_CONC
+    FEATURES_MAX_SIZE += CHUNK_NUM_ALT_PER_SEC
+    FEATURES_MAX_SIZE += 2    # sum(alt_conc), sum(alt_per_sec)
+    FEATURES_MAX_SIZE += 20   # conc, per_sec
 
 
 def init_worker(X_shared, T_shared):
@@ -82,7 +101,6 @@ def kfp_features(X, T, y, seed=None):
     # Use a multiprocessing Pool with an initializer to share X and T.
     # Using imap with tqdm for a progress bar.
     with mp.Pool(initializer=init_worker, initargs=(X, T)) as pool:
-
         # If a seed is set, we need to use ordered imap to make sure
         # the results order is always predictable
         if seed != None:
@@ -329,7 +347,11 @@ def time_percentile_stats(Total):
 
 def number_pkt_stats(Total):
     In, Out = In_Out(Total)
-    stats = [len(In), len(Out), len(Total)]
+    stats = [
+        len(In),
+        len(Out),
+        len(Total)
+    ]
     stats_labels = [
         "number_packets_in",
         "number_packets_out",
@@ -357,10 +379,10 @@ def first_and_last_30_pkts_stats(Total):
             last30out.append(p)
     stats = []
     stats_labels = [
-        "first_30_packets_in",
-        "first_30_packets_out",
-        "last_30_packets_in",
-        "last_30_packets_out",
+        "num_first_30_packets_in",
+        "num_first_30_packets_out",
+        "num_last_30_packets_in",
+        "num_last_30_packets_out",
     ]
     stats.append(len(first30in))
     stats.append(len(first30out))
@@ -558,129 +580,129 @@ def unique_pkt_lengths(list_data):
 
 
 # If size information available add them in to function below
-def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
+def TOTAL_FEATURES(list_data, time_features=TIME_FEATURES, number_features=NUMBER_FEATURES, size_features=SIZE_FEATURES, alternate_features=ALTERNATE_FEATURES, max_size=FEATURES_MAX_SIZE):
     ALL_FEATURES = []
 
     list_size_data      = list_data
     list_direction_data = [(time, np.sign(size)) for (time, size) in list_data]
 
-    # ------TIME--------
+    if time_features:
+        intertimestats = interarrival_maxminmeansd_stats(list_direction_data)
+        timestats = time_percentile_stats(list_direction_data)
 
-    intertimestats = interarrival_maxminmeansd_stats(list_direction_data)
-    timestats = time_percentile_stats(list_direction_data)
-    number_pkts = number_pkt_stats(list_direction_data)
-    thirty_pkts = first_and_last_30_pkts_stats(list_direction_data)
-    [avg_conc, std_conc, med_conc, min_conc, max_conc, conc] = (
-        pkt_concentration_stats(list_direction_data)
-    )
-    [avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec] = (
-        number_per_sec(list_direction_data)
-    )
-    [avg_order_in, avg_order_out, std_order_in, std_order_out] = (
-        avg_pkt_ordering_stats(list_direction_data)
-    )
-    [perc_in, perc_out] = perc_inc_out(list_direction_data)
+        ALL_FEATURES.extend(intertimestats)
+        ALL_FEATURES.extend(timestats)
 
-    alt_conc = [sum(x) for x in chunkIt(conc, CHUNK_NUM_ALT_CONC)]
-    alt_per_sec = [sum(x) for x in chunkIt(per_sec, CHUNK_NUM_ALT_PER_SEC)]
-    if len(alt_conc) == CHUNK_NUM_ALT_CONC:
-        alt_conc.append(0)
-    if len(alt_per_sec) == CHUNK_NUM_ALT_PER_SEC:
-        alt_per_sec.append(0)
+        ALL_FEATURES.append(sum(intertimestats))
+        ALL_FEATURES.append(sum(timestats))
 
-    # TIME FEATURES
+    if number_features:
+        number_pkts = number_pkt_stats(list_direction_data)
+        thirty_pkts = first_and_last_30_pkts_stats(list_direction_data)
+        [avg_conc, std_conc, med_conc, min_conc, max_conc, conc] = (
+            pkt_concentration_stats(list_direction_data)
+        )
+        [avg_per_sec, std_per_sec, med_per_sec, min_per_sec, max_per_sec, per_sec] = (
+            number_per_sec(list_direction_data)
+        )
+        [avg_order_in, avg_order_out, std_order_in, std_order_out] = (
+            avg_pkt_ordering_stats(list_direction_data)
+        )
+        [perc_in, perc_out] = perc_inc_out(list_direction_data)
 
-    ALL_FEATURES.extend(intertimestats)
-    ALL_FEATURES.extend(timestats)
-    ALL_FEATURES.extend(number_pkts)
-    ALL_FEATURES.extend(thirty_pkts)
+        ALL_FEATURES.extend(number_pkts)
+        ALL_FEATURES.append(sum(number_pkts))
 
-    # pkt_concentration_stats()
-    ALL_FEATURES.append(avg_conc)
-    ALL_FEATURES.append(std_conc)
-    ALL_FEATURES.append(med_conc)
-    ALL_FEATURES.append(min_conc)
-    ALL_FEATURES.append(max_conc)
+        ALL_FEATURES.extend(thirty_pkts)
 
-    # number_per_sec()
-    ALL_FEATURES.append(avg_per_sec)
-    ALL_FEATURES.append(std_per_sec)
-    ALL_FEATURES.append(med_per_sec)
-    ALL_FEATURES.append(min_per_sec)
-    ALL_FEATURES.append(max_per_sec)
+        # pkt_concentration_stats()
+        ALL_FEATURES.append(avg_conc)
+        ALL_FEATURES.append(std_conc)
+        ALL_FEATURES.append(med_conc)
+        ALL_FEATURES.append(min_conc)
+        ALL_FEATURES.append(max_conc)
 
-    # avg_pkt_ordering_stats()
-    ALL_FEATURES.append(avg_order_in)
-    ALL_FEATURES.append(avg_order_out)
-    ALL_FEATURES.append(std_order_in)
-    ALL_FEATURES.append(std_order_out)
+        # number_per_sec()
+        ALL_FEATURES.append(avg_per_sec)
+        ALL_FEATURES.append(std_per_sec)
+        ALL_FEATURES.append(med_per_sec)
+        ALL_FEATURES.append(min_per_sec)
+        ALL_FEATURES.append(max_per_sec)
 
-    # perc_inc_out()
-    ALL_FEATURES.append(perc_in)
-    ALL_FEATURES.append(perc_out)
+        # avg_pkt_ordering_stats()
+        ALL_FEATURES.append(avg_order_in)
+        ALL_FEATURES.append(avg_order_out)
+        ALL_FEATURES.append(std_order_in)
+        ALL_FEATURES.append(std_order_out)
 
-    ALL_FEATURES.append(sum(intertimestats))
-    ALL_FEATURES.append(sum(timestats))
-    ALL_FEATURES.append(sum(number_pkts))
+        # perc_inc_out()
+        ALL_FEATURES.append(perc_in)
+        ALL_FEATURES.append(perc_out)
 
-    ALL_FEATURES.extend(alt_conc)
-    ALL_FEATURES.extend(alt_per_sec)
+    if alternate_features:
+        alt_conc = [sum(x) for x in chunkIt(conc, CHUNK_NUM_ALT_CONC)]
+        alt_per_sec = [sum(x) for x in chunkIt(per_sec, CHUNK_NUM_ALT_PER_SEC)]
+        if len(alt_conc) == CHUNK_NUM_ALT_CONC:
+            alt_conc.append(0)
+        if len(alt_per_sec) == CHUNK_NUM_ALT_PER_SEC:
+            alt_per_sec.append(0)
 
-    ALL_FEATURES.append(sum(alt_conc))
-    ALL_FEATURES.append(sum(alt_per_sec))
+        ALL_FEATURES.extend(alt_conc)
+        ALL_FEATURES.extend(alt_per_sec)
+
+        ALL_FEATURES.append(sum(alt_conc))
+        ALL_FEATURES.append(sum(alt_per_sec))
 
     # ------SIZE--------
 
-    tot_size = total_size(list_size_data)
-    [in_size, out_size] = in_out_size(list_size_data)
-    avg_total_size = average_total_pkt_size(list_size_data)
-    [avg_size_in, avg_size_out] = average_in_out_pkt_size(list_size_data)
-    var_total_size = variance_total_pkt_size(list_size_data)
-    [var_size_in, var_size_out] = variance_in_out_pkt_size(list_size_data)
-    std_total_size = std_total_pkt_size(list_size_data)
-    [std_size_in, std_size_out] = std_in_out_pkt_size(list_size_data)
-    [max_size_in, max_size_out] = max_in_out_pkt_size(list_size_data)
+    if size_features:
+        tot_size = total_size(list_size_data)
+        [in_size, out_size] = in_out_size(list_size_data)
+        avg_total_size = average_total_pkt_size(list_size_data)
+        [avg_size_in, avg_size_out] = average_in_out_pkt_size(list_size_data)
+        var_total_size = variance_total_pkt_size(list_size_data)
+        [var_size_in, var_size_out] = variance_in_out_pkt_size(list_size_data)
+        std_total_size = std_total_pkt_size(list_size_data)
+        [std_size_in, std_size_out] = std_in_out_pkt_size(list_size_data)
+        [max_size_in, max_size_out] = max_in_out_pkt_size(list_size_data)
 
-    # SIZE FEATURES
+        # total_size()
+        ALL_FEATURES.append(tot_size)
 
-    # total_size()
-    ALL_FEATURES.append(tot_size)
+        # in_out_size()
+        ALL_FEATURES.append(in_size)
+        ALL_FEATURES.append(out_size)
 
-    # in_out_size()
-    ALL_FEATURES.append(in_size)
-    ALL_FEATURES.append(out_size)
+        # average_total_pkt_size()
+        ALL_FEATURES.append(avg_total_size)
 
-    # average_total_pkt_size()
-    ALL_FEATURES.append(avg_total_size)
+        # average_in_out_pkt_size()
+        ALL_FEATURES.append(avg_size_in)
+        ALL_FEATURES.append(avg_size_out)
 
-    # average_in_out_pkt_size()
-    ALL_FEATURES.append(avg_size_in)
-    ALL_FEATURES.append(avg_size_out)
+        # variance_total_pkt_size()
+        ALL_FEATURES.append(var_total_size)
 
-    # variance_total_pkt_size()
-    ALL_FEATURES.append(var_total_size)
+        # variance_in_out_pkt_size()
+        ALL_FEATURES.append(var_size_in)
+        ALL_FEATURES.append(var_size_out)
 
-    # variance_in_out_pkt_size()
-    ALL_FEATURES.append(var_size_in)
-    ALL_FEATURES.append(var_size_out)
+        # std_total_pkt_size()
+        ALL_FEATURES.append(std_total_size)
 
-    # std_total_pkt_size()
-    ALL_FEATURES.append(std_total_size)
+        # std_in_out_pkt_size()
+        ALL_FEATURES.append(std_size_in)
+        ALL_FEATURES.append(std_size_out)
 
-    # std_in_out_pkt_size()
-    ALL_FEATURES.append(std_size_in)
-    ALL_FEATURES.append(std_size_out)
+        # max_in_out_pkt_size()
+        ALL_FEATURES.append(max_size_in)
+        ALL_FEATURES.append(max_size_out)
 
-    # max_in_out_pkt_size()
-    ALL_FEATURES.append(max_size_in)
-    ALL_FEATURES.append(max_size_out)
-
-    # This is optional, since all other features are of equal size this gives the first n features
-    # of this particular feature subset, some may be padded with 0's if too short.
-
-    ALL_FEATURES.extend(conc)
-
-    ALL_FEATURES.extend(per_sec)
+    if alternate_features:
+        # This is optional, since all other features are of equal size this gives the first n features
+        # of this particular feature subset, some may be padded with 0's if too short.
+        ALL_FEATURES.extend(conc)
+        ALL_FEATURES.extend(per_sec)
 
     while len(ALL_FEATURES) < max_size:
         ALL_FEATURES.append(0)
@@ -689,128 +711,135 @@ def TOTAL_FEATURES(list_data, max_size=TOTAL_FEATURES_MAX_SIZE):
     return tuple(features)
 
 
-def kfp_feature_labels():
-    labels = [
-        # interarrival_maxminmeansd_stats()
-        "interarrival_times_max_in",
-        "interarrival_times_max_out",
-        "interarrival_times_max_total",
-        "interarrival_times_avg_in",
-        "interarrival_times_avg_out",
-        "interarrival_times_avg_total",
-        "interarrival_times_std_in",
-        "interarrival_times_std_out",
-        "interarrival_times_std_total",
-        "interarrival_times_75th_percentile_in",
-        "interarrival_times_75th_percentile_out",
-        "interarrival_times_75th_percentile_total",
+def kfp_feature_labels(time_features=TIME_FEATURES, number_features=NUMBER_FEATURES, size_features=SIZE_FEATURES, alternate_features=ALTERNATE_FEATURES):
+    labels = []
 
-        # time_percentile_stats()
-        "time_25th_percentile_in",
-        "time_50th_percentile_in",
-        "time_75th_percentile_in",
-        "time_100th_percentile_in",
-        "time_25th_percentile_out",
-        "time_50th_percentile_out",
-        "time_75th_percentile_out",
-        "time_100th_percentile_out",
-        "time_25th_percentile_total",
-        "time_50th_percentile_total",
-        "time_75th_percentile_total",
-        "time_100th_percentile_total",
+    if time_features:
+        labels += [
+            # interarrival_maxminmeansd_stats() × 12
+            "interarrival_times_max_in",
+            "interarrival_times_max_out",
+            "interarrival_times_max_total",
+            "interarrival_times_avg_in",
+            "interarrival_times_avg_out",
+            "interarrival_times_avg_total",
+            "interarrival_times_std_in",
+            "interarrival_times_std_out",
+            "interarrival_times_std_total",
+            "interarrival_times_75th_percentile_in",
+            "interarrival_times_75th_percentile_out",
+            "interarrival_times_75th_percentile_total",
 
-        # number_pkt_stats()
-        "number_packets_in",
-        "number_packets_out",
-        "number_packets_total",
+            # time_percentile_stats() × 12
+            "time_25th_percentile_in",
+            "time_50th_percentile_in",
+            "time_75th_percentile_in",
+            "time_100th_percentile_in",
+            "time_25th_percentile_out",
+            "time_50th_percentile_out",
+            "time_75th_percentile_out",
+            "time_100th_percentile_out",
+            "time_25th_percentile_total",
+            "time_50th_percentile_total",
+            "time_75th_percentile_total",
+            "time_100th_percentile_total",
 
-        # first_and_last_30_pkts_stats()
-        "first_30_packets_in",
-        "first_30_packets_out",
-        "last_30_packets_in",
-        "last_30_packets_out",
+            "sum_interarrival_times",
+            "sum_time",
+        ]
 
-        # pkt_concentration_stats()
-        "packet_concentration_avg",
-        "packet_concentration_std",
-        "packet_concentration_median",
-        "packet_concentration_min",
-        "packet_concentration_max",
+    if number_features:
+        labels += [
+            # number_pkt_stats() × 3
+            "number_packets_in",
+            "number_packets_out",
+            "number_packets_total",
 
-        # number_per_sec()
-        "packets_per_second_avg",
-        "packets_per_second_std",
-        "packets_per_second_median",
-        "packets_per_second_min",
-        "packets_per_second_max",
+            "sum_number_packets",
 
-        # avg_pkt_ordering_stats()
-        "packet_ordering_in_avg",
-        "packet_ordering_out_avg",
-        "packet_ordering_in_std",
-        "packet_ordering_out_std",
+            # first_and_last_30_pkts_stats() × 4
+            "num_first_30_packets_in",
+            "num_first_30_packets_out",
+            "num_last_30_packets_in",
+            "num_last_30_packets_out",
 
-        # perc_inc_out()
-        "percentage_in",
-        "percentage_out",
-    ]
+            # pkt_concentration_stats() × 5
+            "packet_concentration_avg",
+            "packet_concentration_std",
+            "packet_concentration_median",
+            "packet_concentration_min",
+            "packet_concentration_max",
 
-    labels += [
-        "sum_interarrival_times",
-        "sum_time",
-        "sum_number_packets",
-    ]
+            # number_per_sec() × 5
+            "packets_per_second_avg",
+            "packets_per_second_std",
+            "packets_per_second_median",
+            "packets_per_second_min",
+            "packets_per_second_max",
 
-    labels.extend(
-        [f"alt_packet_concentration_{i}" for i in range(CHUNK_NUM_ALT_CONC + 1)]
-    )
-    labels.extend(
-        [f"alt_packets_per_second_{i}" for i in range(CHUNK_NUM_ALT_PER_SEC + 1)]
-    )
+            # avg_pkt_ordering_stats() × 4
+            "packet_ordering_in_avg",
+            "packet_ordering_out_avg",
+            "packet_ordering_in_std",
+            "packet_ordering_out_std",
 
-    labels += [
-        "sum_alt_packet_concentration",
-        "sum_alt_packets_per_second",
-    ]
+            # perc_inc_out() × 2
+            "percentage_in",
+            "percentage_out",
+        ]
 
-    labels += [
-        # total_size()
-        "packet_size_sum",
+    if alternate_features:
+        labels.extend(
+            [f"alt_packet_concentration_{i}" for i in range(CHUNK_NUM_ALT_CONC)]
+        )
+        labels.extend(
+            [f"alt_packets_per_second_{i}" for i in range(CHUNK_NUM_ALT_PER_SEC)]
+        )
 
-        # in_out_size()
-        "packet_size_sum_in",
-        "packet_size_sum_out",
+        labels += [
+            "sum_alt_packet_concentration",
+            "sum_alt_packets_per_second",
+        ]
 
-        # average_total_pkt_size()
-        "packet_size_avg",
+    if size_features:
+        labels += [
+            # total_size() × 1
+            "packet_size_sum",
 
-        # average_in_out_pkt_size()
-        "packet_size_avg_in",
-        "packet_size_avg_out",
+            # in_out_size() × 2
+            "packet_size_sum_in",
+            "packet_size_sum_out",
 
-        # variance_total_pkt_size()
-        "packet_size_var",
+            # average_total_pkt_size() × 1
+            "packet_size_avg",
 
-        # variance_in_out_pkt_size()
-        "packet_size_var_in",
-        "packet_size_var_out",
+            # average_in_out_pkt_size() × 2
+            "packet_size_avg_in",
+            "packet_size_avg_out",
 
-        # std_total_pkt_size()
-        "packet_size_std",
+            # variance_total_pkt_size() × 1
+            "packet_size_var",
 
-        # std_in_out_pkt_size()
-        "packet_size_std_in",
-        "packet_size_std_out",
+            # variance_in_out_pkt_size() × 2
+            "packet_size_var_in",
+            "packet_size_var_out",
 
-        # max_in_out_pkt_size()
-        "packet_size_max_in",
-        "packet_size_max_out",
-    ]
+            # std_total_pkt_size() × 1
+            "packet_size_std",
+
+            # std_in_out_pkt_size() × 2
+            "packet_size_std_in",
+            "packet_size_std_out",
+
+            # max_in_out_pkt_size() × 2
+            "packet_size_max_in",
+            "packet_size_max_out",
+        ]
 
     fixed_features_size = len(labels)
 
     labels.extend(
-        [f"features_{i}" for i in range(TOTAL_FEATURES_MAX_SIZE - fixed_features_size)]
+        [f"features_{i}" for i in range(FEATURES_MAX_SIZE - fixed_features_size)]
     )
 
     return labels
