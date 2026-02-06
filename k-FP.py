@@ -112,13 +112,32 @@ def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
     te_data, te_label = zip(*test_set)
     te_data, te_label = list(te_data), [label[0] for label in te_label]
 
-    print("Training...\n")
     model = RandomForestClassifier(
         n_jobs=-1, n_estimators=num_trees, oob_score=True, random_state=seed
     )
     model.fit(tr_data, tr_label)
 
-    print(f"TESTING ACCURACY    : {model.score(te_data, te_label)}")
+    def compute_accuracy_bounds(model, data, labels, n_samples=1000, ci=0.95, seed=None):
+        """Compute mean accuracy and confidence bounds using bootstrapping."""
+        rng = np.random.default_rng(seed)
+        accuracies = []
+
+        for _ in range(n_samples):
+            indices = rng.integers(0, len(data), len(data))
+            X_sample = [data[i] for i in indices]
+            y_sample = [labels[i] for i in indices]
+            acc = model.score(X_sample, y_sample)
+            accuracies.append(acc)
+
+        mean = np.mean(accuracies)
+        lower = np.percentile(accuracies, ((1 - ci) / 2) * 100)
+        upper = np.percentile(accuracies, (1 - (1 - ci) / 2) * 100)
+        return mean, lower, upper
+
+    # Compute accuracy with 95% CI
+    test_mean, test_low, test_high = compute_accuracy_bounds(model, te_data, te_label, seed=seed)
+
+    print(f"TESTING ACCURACY : {test_mean:.4f} ± {(test_high - test_low)/2:.4f} (95% CI: [{test_low:.4f}, {test_high:.4f}])")
     print()
 
     feature_labels = kfp_feature_labels()
