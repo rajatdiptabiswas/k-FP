@@ -2,8 +2,6 @@ import code
 import random
 import os
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.inspection import permutation_importance
@@ -99,20 +97,17 @@ def load_dataset(input_dir: str, max_length=8000):
     return X, T, y
 
 
-def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
+def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
     """
     Closed world Random Forest classification of data.
     Only uses `scikit-learn` classification - does not do additional k-NN.
 
-    `train_set`, `valid_set`, `test_set` shape
+    `train_set`, `test_set` shape
     [[n features], (class label, instance)]
     """
 
     tr_data, tr_label = zip(*train_set)
     tr_data, tr_label = list(tr_data), [label[0] for label in tr_label]
-
-    val_data, val_label = zip(*valid_set)
-    val_data, val_label = list(val_data), [label[0] for label in val_label]
 
     te_data, te_label = zip(*test_set)
     te_data, te_label = list(te_data), [label[0] for label in te_label]
@@ -123,7 +118,6 @@ def RF_closedworld(train_set, valid_set, test_set, num_trees=1000, seed=None):
     )
     model.fit(tr_data, tr_label)
 
-    print(f"VALIDATION ACCURACY : {model.score(val_data, val_label)}")
     print(f"TESTING ACCURACY    : {model.score(te_data, te_label)}")
     print()
 
@@ -213,19 +207,14 @@ def kfp(dataset_directory: str):
     array([80., 40.,  8., 50., 97.])
     """
 
-    # Split dataset into training, validation, and test sets
-    # 80% of data is used for training
-    # Remaining 20% is split equally into validation and test sets
-    X_train, X_test_val, T_train, T_test_val, y_train, y_test_val = train_test_split(
-        X, T, y, test_size=0.2, random_state=seed
-    )
-    X_test, X_val, T_test, T_val, y_test, y_val = train_test_split(
-        X_test_val, T_test_val, y_test_val, test_size=0.5, shuffle=False
+    # Split dataset into training and test set
+    # 90% of data is used for training, remaining 10% is the test set
+    X_train, X_test, T_train, T_test, y_train, y_test = train_test_split(
+        X, T, y, test_size=0.1, random_state=seed
     )
 
     # Generate the k-FP features
     train_set = kfp_features(X_train, T_train, y_train, seed)
-    valid_set = kfp_features(X_val, T_val, y_val, seed)
     test_set = kfp_features(X_test, T_test, y_test, seed)
 
     # Open interactive shell for debugging
@@ -233,12 +222,11 @@ def kfp(dataset_directory: str):
 
     # Free up memory by deleting the raw `numpy` arrays after feature extraction
     del X, T, y
-    del X_train, X_test_val, T_train, T_test_val, y_train, y_test_val
-    del X_test, X_val, T_test, T_val, y_test, y_val
+    del X_train, X_test, T_train, T_test, y_train, y_test
 
     # Train and evaluate Random Forest model for closed-world website fingerprinting
     RF_closedworld(
-        train_set=train_set, valid_set=valid_set, test_set=test_set, seed=seed
+        train_set=train_set, test_set=test_set, seed=seed
     )
 
 
