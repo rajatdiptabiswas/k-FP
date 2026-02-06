@@ -136,8 +136,8 @@ def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
 
     print("FEATURE IMPORTANCE SCORES")
     for score, label in sorted(
-        list(zip(feature_importance_scores, feature_labels))[:25], reverse=True
-    ):
+        list(zip(feature_importance_scores, feature_labels)), reverse=True
+    )[:25]:
         print(f"{score:>1.10f}    {label}")
     print()
 
@@ -147,8 +147,8 @@ def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
 
     print("PERMUTATION IMPORTANCE SCORES")
     for score, label in sorted(
-        list(zip(permutation_importance_scores.importances_mean, feature_labels))[:25], reverse=True
-    ):
+        list(zip(permutation_importance_scores.importances_mean, feature_labels)), reverse=True
+    )[:25]:
         print(f"{score:>1.10f}    {label}")
     print()
 
