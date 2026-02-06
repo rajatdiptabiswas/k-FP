@@ -10,28 +10,26 @@ from tqdm import tqdm
 global_X = None
 global_T = None
 
-TIME_FEATURES = True
-NUMBER_FEATURES = True
-SIZE_FEATURES = True
-ALTERNATE_FEATURES = True and NUMBER_FEATURES
-
 CHUNK_NUM_ALT_CONC = 70
 CHUNK_NUM_ALT_PER_SEC = 20
 
 ORIGINAL_FEATURES_MAX_SIZE = 175
 
-FEATURES_MAX_SIZE = 0
-if TIME_FEATURES:
-    FEATURES_MAX_SIZE += 26 - 4 - 4
-if NUMBER_FEATURES:
-    FEATURES_MAX_SIZE += 24 - 1
-if SIZE_FEATURES:
-    FEATURES_MAX_SIZE += 14 - 4
-if ALTERNATE_FEATURES:
-    FEATURES_MAX_SIZE += CHUNK_NUM_ALT_CONC
-    FEATURES_MAX_SIZE += CHUNK_NUM_ALT_PER_SEC
-    FEATURES_MAX_SIZE += 2    # sum(alt_conc), sum(alt_per_sec)
-    FEATURES_MAX_SIZE += 20   # conc, per_sec
+
+def features_max_size(time_features=False, number_features=True, size_features=False, alternate_features=False):
+    max_size = 0
+    if time_features:
+        max_size += 26 - 4 - 4  # 18 features
+    if number_features:
+        max_size += 24 - 1  # 23 features
+    if size_features:
+        max_size += 14 - 4  # 10 features
+    if alternate_features:
+        max_size += CHUNK_NUM_ALT_CONC
+        max_size += CHUNK_NUM_ALT_PER_SEC
+        max_size += 2    # sum(alt_conc), sum(alt_per_sec)
+        max_size += 20   # conc, per_sec
+    return max_size
 
 
 def init_worker(X_shared, T_shared):
@@ -49,7 +47,7 @@ def process_instance(args):
     Processes one instance (a row in X and T).
     Finds the first zero in the row, prepares the list_data, and computes features.
     """
-    idx, site, instance_no = args
+    idx, site, instance_no, time_feat, num_feat, size_feat, alt_feat = args
     global global_X, global_T
 
     row = global_X[idx]
@@ -64,7 +62,13 @@ def process_instance(args):
     list_data = list(
         zip(global_T[idx][:last_cell_index], row[:last_cell_index].astype(int))
     )
-    features = TOTAL_FEATURES(list_data)
+    features = TOTAL_FEATURES(
+        list_data,
+        time_features=time_feat,
+        number_features=num_feat,
+        size_features=size_feat,
+        alternate_features=alt_feat
+    )
     return ([features], (int(site), instance_no))
 
 
@@ -82,7 +86,7 @@ def chunks(labels, features):
     return labels_chunked, features_chunked
 
 
-def kfp_features(X, T, y, seed=None):
+def kfp_features(X, T, y, seed=None, time_features=False, number_features=True, size_features=False, alternate_features=False):
     """
     Parallelized version of the kfp_features function using multiprocessing.Pool.
     X and T are large numpy arrays that are shared with worker processes.
@@ -96,7 +100,7 @@ def kfp_features(X, T, y, seed=None):
     for site in unique_sites:
         indices = site_to_indices[site]
         for instance_no, idx in enumerate(indices):
-            tasks.append((idx, site, instance_no))
+            tasks.append((idx, site, instance_no, time_features, number_features, size_features, alternate_features))
 
     # Use a multiprocessing Pool with an initializer to share X and T.
     # Using imap with tqdm for a progress bar.
@@ -580,7 +584,10 @@ def unique_pkt_lengths(list_data):
 
 
 # If size information available add them in to function below
-def TOTAL_FEATURES(list_data, time_features=TIME_FEATURES, number_features=NUMBER_FEATURES, size_features=SIZE_FEATURES, alternate_features=ALTERNATE_FEATURES, max_size=FEATURES_MAX_SIZE):
+def TOTAL_FEATURES(list_data, time_features=False, number_features=True, size_features=False, alternate_features=False, max_size=None):
+    if max_size is None:
+        max_size = features_max_size(time_features, number_features, size_features, alternate_features)
+
     ALL_FEATURES = []
 
     list_size_data      = list_data
@@ -711,7 +718,7 @@ def TOTAL_FEATURES(list_data, time_features=TIME_FEATURES, number_features=NUMBE
     return tuple(features)
 
 
-def kfp_feature_labels(time_features=TIME_FEATURES, number_features=NUMBER_FEATURES, size_features=SIZE_FEATURES, alternate_features=ALTERNATE_FEATURES):
+def kfp_feature_labels(time_features=False, number_features=True, size_features=False, alternate_features=False):
     labels = []
 
     if time_features:
@@ -838,8 +845,10 @@ def kfp_feature_labels(time_features=TIME_FEATURES, number_features=NUMBER_FEATU
 
     fixed_features_size = len(labels)
 
+    max_size = features_max_size(time_features, number_features, size_features, alternate_features)
+
     labels.extend(
-        [f"features_{i}" for i in range(FEATURES_MAX_SIZE - fixed_features_size)]
+        [f"features_{i}" for i in range(max_size - fixed_features_size)]
     )
 
     return labels

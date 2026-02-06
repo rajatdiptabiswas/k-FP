@@ -1,4 +1,3 @@
-import code
 import random
 import os
 import numpy as np
@@ -6,6 +5,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.inspection import permutation_importance
 from RF_fextract import kfp_features, kfp_feature_labels
+from contextlib import redirect_stdout
+from itertools import combinations
 
 
 def load_dataset(input_dir: str, max_length=8000):
@@ -56,6 +57,37 @@ def load_dataset(input_dir: str, max_length=8000):
         - X (np.ndarray): Packet size sequences (+ve for outgoing, -ve for incoming), shape (N, max_length), padded with 0.
         - T (np.ndarray): Packet timestamps, shape (N, max_length), padded with -1.
         - y (np.ndarray): Integer website labels, shape (N,).
+
+    Example Output:
+        - X: Packet size sequences for traces, each of length 5000, padded with 0
+        >>> X.shape
+        (20910, 5000)
+        >>> X[:5]
+        array([
+            [   74.,   -74.,    66., ...,     0.,     0.,     0.],
+            [   74.,   -74.,    66., ...,   594.,   582.,   591.],
+            [   74.,   -74.,    66., ...,     0.,     0.,     0.],
+            [   74.,   -74.,    66., ..., -1469.,    66.,   -66.],
+            [   74.,   -74.,    66., ...,     0.,     0.,     0.]
+        ], shape=(5, 5000), dtype=float32)
+
+        - T: Corresponding packet timestamps, each of length 5000, padded with -1
+        >>> T.shape
+        (20910, 5000)
+        >>> T[:5]
+        array([
+            [ 0. , 0.162228, 0.23113 , ..., -1.      , -1.      , -1.      ],
+            [ 0. , 0.122405, 0.189939, ...,  4.60121 ,  4.601213,  4.601215],
+            [ 0. , 0.21627 , 0.284489, ..., -1.      , -1.      , -1.      ],
+            [ 0. , 0.212338, 0.283137, ..., 11.033474, 11.033477, 11.069212],
+            [ 0. , 0.12259 , 0.189454, ..., -1.      , -1.      , -1.      ]
+        ], shape=(5, 5000))
+
+        - y: Website labels corresponding to each trace
+        >>> y.shape
+        (20910,)
+        >>> y[:5]
+        array([80., 40.,  8., 50., 97.])
     """
 
     file_list = sorted([f for f in os.listdir(input_dir) if f.endswith(".tsv")])
@@ -97,25 +129,45 @@ def load_dataset(input_dir: str, max_length=8000):
     return X, T, y
 
 
-def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
+def RF_closedworld(X, T, y, feature_flags, num_trees=1000, seed=None):
     """
-    Closed world Random Forest classification of data.
+    Train and evaluate Random Forest model for closed-world website fingerprinting.
     Only uses `scikit-learn` classification - does not do additional k-NN.
 
-    `train_set`, `test_set` shape
-    [[n features], (class label, instance)]
+    Parameters:
+        - X (np.ndarray): Packet size sequences, shape (N, max_length).
+        - T (np.ndarray): Packet timestamps, shape (N, max_length).
+        - y (np.ndarray): Website class labels, shape (N,).
+        - feature_flags (dict): Feature extraction configuration flags.
+        - num_trees (int): Number of decision trees in the forest (default: 1000).
+        - seed (int): Random seed for reproducibility (default: None).
     """
 
-    tr_data, tr_label = zip(*train_set)
-    tr_data, tr_label = list(tr_data), [label[0] for label in tr_label]
+    def get_data_label(X, T, y):
+        """
+        Extract features data and class label from the dataset.
+        """
+        feature_set = kfp_features(X, T, y, seed, **feature_flags)
+        # `feature_set` shape: [[n features], (class label, instance)]
+        data, label = zip(*feature_set)
+        data, label = list(data), [l[0] for l in label]
+        return data, label
 
-    te_data, te_label = zip(*test_set)
-    te_data, te_label = list(te_data), [label[0] for label in te_label]
+    # Split dataset into training and test set
+    # 90% of data is used for training, remaining 10% is the test set
+    # Stratification prevents class imbalance
+    X_train, X_test, T_train, T_test, y_train, y_test = train_test_split(
+        X, T, y, test_size=0.1, random_state=seed, stratify=y
+    )
 
+    train_data, train_label = get_data_label(X_train, T_train, y_train)
+    test_data, test_label = get_data_label(X_test, T_test, y_test)
+
+    # Perform k-FP on 90/10 split
     model = RandomForestClassifier(
         n_jobs=-1, n_estimators=num_trees, oob_score=True, random_state=seed
     )
-    model.fit(tr_data, tr_label)
+    model.fit(train_data, train_label)
 
     def compute_accuracy_bounds(model, data, labels, n_samples=1000, ci=0.95, seed=None):
         """Compute mean accuracy and confidence bounds using bootstrapping."""
@@ -135,13 +187,13 @@ def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
         return mean, lower, upper
 
     # Compute accuracy with 95% CI
-    test_mean, test_low, test_high = compute_accuracy_bounds(model, te_data, te_label, seed=seed)
+    test_mean, test_low, test_high = compute_accuracy_bounds(model, test_data, test_label, seed=seed)
 
     print(f"TESTING ACCURACY : {test_mean:.4f} ± {(test_high - test_low)/2:.4f} (95% CI: [{test_low:.4f}, {test_high:.4f}])")
     print()
 
-    feature_labels = kfp_feature_labels()
-    assert len(feature_labels) == len(tr_data[0]), f"Feature label size ({len(feature_labels)}) does not match feature vector size ({len(tr_data[0])})"
+    feature_labels = kfp_feature_labels(**feature_flags)
+    assert len(feature_labels) == len(train_data[0]), f"Feature label size ({len(feature_labels)}) does not match feature vector size ({len(train_data[0])})"
 
     feature_importance_scores = model.feature_importances_
 
@@ -161,7 +213,7 @@ def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
     print()
 
     permutation_importance_scores = permutation_importance(
-        model, te_data, te_label, n_repeats=10, random_state=seed
+        model, test_data, test_label, n_repeats=10, random_state=seed
     )
 
     print("PERMUTATION IMPORTANCE SCORES")
@@ -172,95 +224,64 @@ def RF_closedworld(train_set, test_set, num_trees=1000, seed=None):
     print()
 
 
-def kfp(dataset_directory: str):
+def kfp(dataset_directory: str, features):
+    """
+    Load dataset and train Random Forest model for website fingerprinting.
+    
+    Parameters:
+        - dataset_directory (str): Path to directory containing website trace .tsv files.
+        - features (list): List of feature types to use ('num', 'size', 'time', 'alt').
+    """
+
     # Set `random` seed value for reproducibility
     seed = 0
     random.seed(seed)
 
-    # Load the sample `numpy` arrays
-    # X: Packet direction (-1 for incoming, +1 for outgoing, 0 for padding)
-    # T: Packet timestamp (relative to the first packet, padded with -1)
-    # y: Website label (categorical identifier for each website)
-    # with open("./X.dill", "rb") as file:
-    #     X = dill.load(file)
-    # with open("./T.dill", "rb") as file:
-    #     T = dill.load(file)
-    # with open("./y.dill", "rb") as file:
-    #     y = dill.load(file)
-
+    # Load the `numpy` arrays
     X, T, y = load_dataset(dataset_directory)
 
-    """
-    X: Packet size sequences for 20910 traces, each of length 5000, padded with 0
-    >>> X.shape
-    (20910, 5000)
-    >>> X[:5]
-    array([
-        [   74.,   -74.,    66., ...,     0.,     0.,     0.],
-        [   74.,   -74.,    66., ...,   594.,   582.,   591.],
-        [   74.,   -74.,    66., ...,     0.,     0.,     0.],
-        [   74.,   -74.,    66., ..., -1469.,    66.,   -66.],
-        [   74.,   -74.,    66., ...,     0.,     0.,     0.]
-    ], shape=(5, 5000), dtype=float32)
+    feature_flags = {
+        'time_features': 'time' in features,
+        'number_features': 'num' in features,
+        'size_features': 'size' in features,
+        'alternate_features': 'alt' in features and 'num' in features
+    }
 
-    --------------------
-
-    T: Corresponding packet timestamps, each of length 5000, padded with -1
-    >>> T.shape
-    (20910, 5000)
-    >>> T[:5]
-    array([
-        [ 0. , 0.162228, 0.23113 , ..., -1.      , -1.      , -1.      ],
-        [ 0. , 0.122405, 0.189939, ...,  4.60121 ,  4.601213,  4.601215],
-        [ 0. , 0.21627 , 0.284489, ..., -1.      , -1.      , -1.      ],
-        [ 0. , 0.212338, 0.283137, ..., 11.033474, 11.033477, 11.069212],
-        [ 0. , 0.12259 , 0.189454, ..., -1.      , -1.      , -1.      ]
-    ], shape=(5, 5000))
-
-    --------------------
-
-    y: Website labels corresponding to each trace
-    >>> y.shape
-    (20910,)
-    >>> y[:5]
-    array([80., 40.,  8., 50., 97.])
-    """
-
-    # Split dataset into training and test set
-    # 90% of data is used for training, remaining 10% is the test set
-    # Stratification prevents class imbalance
-    X_train, X_test, T_train, T_test, y_train, y_test = train_test_split(
-        X, T, y, test_size=0.1, random_state=seed, stratify=y
-    )
-
-    # Generate the k-FP features
-    train_set = kfp_features(X_train, T_train, y_train, seed)
-    test_set = kfp_features(X_test, T_test, y_test, seed)
-
-    # Open interactive shell for debugging
-    # code.interact(local=locals())
-
-    # Free up memory by deleting the raw `numpy` arrays after feature extraction
-    del X, T, y
-    del X_train, X_test, T_train, T_test, y_train, y_test
-
-    # Train and evaluate Random Forest model for closed-world website fingerprinting
     RF_closedworld(
-        train_set=train_set, test_set=test_set, seed=seed
+        X, T, y, feature_flags, seed=seed
     )
 
 
 def main():
-    dataset_directory = "/Users/rajat/website-fingerprinting/"
+    experiment_date = "2026-01-01"
 
-    crs_list = ["slitheen"]
-    site_list = ["example-neverssl", "example-overt", "neverssl-overt"]
+    dataset_directory = f"/Users/rajat/website-fingerprinting/results/{experiment_date}/"
+
+    crs_list = ["slitheen", "waterfall"]
+
+    dataset_list = ["dataset-tcp", "dataset-tls"]
+
+    sites = ["example", "neverssl", "overt"]
+    site_list = ["-".join(combination) for combination in combinations(sorted(sites), 2)]
+
+    features = ["num", "size", "time", "alt"]
 
     for crs in crs_list:
-        for site in site_list:
-            directory = dataset_directory + f"{crs}/dataset/{site}"
-            print(f"\n{crs.upper()} / {site.upper()}\n")
-            kfp(directory)
+        for dataset_type in dataset_list:
+            for site in site_list:
+                data_type = dataset_type.split("-")[1]
+
+                directory = dataset_directory + f"{crs}/{dataset_type}/{site}"
+
+                features_str = "+".join(sorted(features))
+                print(f"\n{crs.upper()} / {data_type.upper()} / {site.upper()} / {features_str.upper()}\n")
+
+                log_file_path = f"./logs/{crs}/{data_type}/{features_str}/{experiment_date}_kfp_{features_str}_{crs}_{data_type}_{site}.txt"
+
+                os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+                with open(log_file_path, "w", encoding="utf-8") as f:
+                    with redirect_stdout(f):
+                        kfp(directory, features)
 
 
 if __name__ == "__main__":
