@@ -2,7 +2,7 @@ import random
 import os
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.inspection import permutation_importance
 from RF_fextract import kfp_features, kfp_feature_labels
 from contextlib import redirect_stdout
@@ -162,6 +162,20 @@ def RF_closedworld(X, T, y, feature_flags, num_trees=1000, seed=None):
 
     train_data, train_label = get_data_label(X_train, T_train, y_train)
     test_data, test_label = get_data_label(X_test, T_test, y_test)
+    all_data, all_label = get_data_label(X, T, y)
+
+    # Perform 10-Fold Cross-Validation
+    cv_model = RandomForestClassifier(n_jobs=-1, n_estimators=1000, random_state=seed)
+    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
+    cv_scores = cross_val_score(cv_model, all_data, all_label, cv=skf)
+
+    print("-" * 40)
+    print("10-FOLD CROSS-VALIDATION RESULTS")
+    print(f"Mean Accuracy : {cv_scores.mean():.4f}")
+    print(f"Std Deviation : {cv_scores.std():.4f}")
+    print(f"95% CI        : [{cv_scores.mean() - (1.96 * cv_scores.std()):.4f}, {cv_scores.mean() + (1.96 * cv_scores.std()):.4f}]")
+    print("-" * 40)
+    print()
 
     # Perform k-FP on 90/10 split
     model = RandomForestClassifier(
