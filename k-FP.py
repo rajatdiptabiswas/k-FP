@@ -209,8 +209,9 @@ def kfp(dataset_directory: str):
 
     # Split dataset into training and test set
     # 90% of data is used for training, remaining 10% is the test set
+    # Stratification prevents class imbalance
     X_train, X_test, T_train, T_test, y_train, y_test = train_test_split(
-        X, T, y, test_size=0.1, random_state=seed
+        X, T, y, test_size=0.1, random_state=seed, stratify=y
     )
 
     # Generate the k-FP features
